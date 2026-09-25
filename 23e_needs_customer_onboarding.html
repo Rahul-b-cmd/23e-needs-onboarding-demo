@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>23E NeeDs - Customer Registration, Login & Hyperlocal Location</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Plus Jakarta Sans & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Leaflet CSS & JS for Interactive Location Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Three.js for 3D Visuals -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              orange: '#FF5A00',
+              hover: '#E54E00',
+              glow: '#FFA066',
+              dark: '#0D0F12',
+              card: '#161920',
+              surface: '#1E222B',
+              border: '#2A303C'
+            }
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'float': 'float 4s ease-in-out infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-6px)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #090A0D;
+      color: #E6E8EC;
+      overflow-x: hidden;
+    }
+    .glass-panel {
+      background: rgba(22, 25, 32, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 90, 0, 0.12);
+    }
+    .glass-card {
+      background: rgba(30, 34, 43, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      transition: all 0.25s ease;
+    }
+    .glass-card:hover {
+      border-color: rgba(255, 90, 0, 0.35);
+    }
+    /* Leaflet dark theme customization */
+    .leaflet-container {
+      background-color: #12151c !important;
+      font-family: 'Plus Jakarta Sans', sans-serif !important;
+    }
+    .leaflet-popup-content-wrapper {
+      background: #161920 !important;
+      color: #fff !important;
+      border: 1px solid #FF5A00 !important;
+      border-radius: 12px !important;
+      font-size: 11px !important;
+    }
+    .leaflet-popup-tip {
+      background: #161920 !important;
+    }
+    /* Hide scrollbar */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: #0D0F12; }
+    ::-webkit-scrollbar-thumb { background: #FF5A00; border-radius: 999px; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-brand-orange selection:text-white">
+
+  <header class="glass-panel sticky top-0 z-40 border-b border-gray-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <a href="#" class="flex items-center space-x-3 group">
+        <div class="relative flex items-center justify-center w-10 h-10 rounded-xl bg-[#12141a] border border-gray-700/80 shadow-inner group-hover:border-brand-orange/60 transition">
+          <div class="w-0 h-0 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent border-l-[14px] border-l-brand-orange group-hover:scale-110 transition transform"></div>
+        </div>
+        <div>
+          <div class="flex items-center text-2xl font-black font-display tracking-tight leading-none">
+            <span class="text-white">23</span>
+            <span class="text-brand-orange">E</span>
+            <span class="text-brand-orange ml-1">Nee</span><span class="text-white">Ds</span>
+          </div>
+          <p class="text-[10px] text-gray-400 font-medium tracking-wide uppercase mt-0.5">Everything You Need</p>
+        </div>
+      </a>
+
+      <!-- Quick Context Indicator & Security Badge -->
+      <div class="flex items-center space-x-3">
+        <div class="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-800/50 text-[11px] text-emerald-400 font-semibold">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <span>Urban (10m) & Rural Gram-Panchayat Network</span>
+        </div>
+        <div class="text-xs text-gray-400 flex items-center gap-1">
+          <i class="fa-solid fa-shield-halved text-brand-orange"></i>
+          <span class="hidden md:inline">256-bit SSL Secure Auth</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div id="simulated-otp-banner" class="hidden fixed top-16 left-1/2 transform -translate-x-1/2 z-50 w-11/12 max-w-md bg-gradient-to-r from-gray-900 to-[#1e222d] border-2 border-brand-orange p-3.5 rounded-2xl shadow-2xl animate-bounce">
+    <div class="flex items-start justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl bg-brand-orange text-white flex items-center justify-center font-bold text-sm shrink-0">
+          <i id="otp-channel-icon" class="fa-solid fa-mobile-screen"></i>
+        </div>
+        <div>
+          <p id="otp-channel-title" class="text-xs font-bold text-white">23E NeeDs OTP Verification</p>
+          <p class="text-[11px] text-gray-300">Your single-use passcode is: <span id="mock-otp-display" class="font-mono font-black text-brand-orange text-sm px-1.5 py-0.5 bg-brand-dark rounded border border-brand-orange/40">123456</span></p>
+        </div>
+      </div>
+      <button onclick="autoFillMockOTP()" class="text-[10px] px-2.5 py-1 rounded-lg bg-brand-orange text-white font-bold hover:brightness-110 shrink-0">
+        Auto Fill
+      </button>
+    </div>
+  </div>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    
+    <!-- LEFT SIDE: 3D Interactive Hero Card & Feature Pillars -->
+    <div class="lg:col-span-5 space-y-6">
+      <div class="glass-panel p-6 sm:p-7 rounded-3xl border border-gray-800/80 relative overflow-hidden">
+        <!-- Ambient lighting -->
+        <div class="absolute -top-16 -left-16 w-60 h-60 bg-brand-orange/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="relative z-10">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-orange/15 border border-brand-orange/30 text-brand-orange text-xs font-bold mb-3">
+            <i class="fa-solid fa-location-dot"></i> Blinkit-Grade Location Intelligence
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-black font-display text-white tracking-tight leading-tight">
+            Instant Delivery to Your Exact Doorstep & Farm Hub.
+          </h1>
+          <p class="text-xs sm:text-sm text-gray-400 mt-2 leading-relaxed">
+            Register once to access 10-minute dark store deliveries in urban sectors or same-day agricultural supplies at rural Gram-Panchayat centers.
+          </p>
+
+          <!-- 3D Canvas Box -->
+          <div class="my-5 relative w-full h-56 rounded-2xl bg-[#090b10] border border-gray-800 overflow-hidden flex items-center justify-center">
+            <div id="three-hero-container" class="w-full h-full"></div>
+            <div class="absolute bottom-2 left-3 bg-gray-900/80 border border-gray-700/60 px-2.5 py-1 rounded-lg text-[10px] text-gray-300 font-mono backdrop-blur-sm">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block mr-1"></span> Live GPS Engine Ready
+            </div>
+          </div>
+
+          <!-- Feature Bullets -->
+          <div class="grid grid-cols-2 gap-3 pt-2 text-xs">
+            <div class="p-2.5 rounded-xl bg-gray-900/60 border border-gray-800">
+              <i class="fa-solid fa-bolt text-brand-orange text-sm mb-1 block"></i>
+              <strong class="text-white block">10-Min Urban SLA</strong>
+              <span class="text-gray-400 text-[11px]">Dark stores within 3.5km</span>
+            </div>
+            <div class="p-2.5 rounded-xl bg-gray-900/60 border border-gray-800">
+              <i class="fa-solid fa-wheat-awn text-emerald-400 text-sm mb-1 block"></i>
+              <strong class="text-white block">Rural Village Nodes</strong>
+              <span class="text-gray-400 text-[11px]">Direct hub drop point</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Trust Indicators -->
+      <div class="flex items-center justify-around p-3 rounded-2xl bg-gray-900/40 border border-gray-800/80 text-[11px] text-gray-400 font-medium">
+        <span class="flex items-center gap-1.5"><i class="fa-solid fa-lock text-emerald-400"></i> No Spam SMS</span>
+        <span class="flex items-center gap-1.5"><i class="fa-solid fa-check text-brand-orange"></i> Instant OTP</span>
+        <span class="flex items-center gap-1.5"><i class="fa-solid fa-map-pin text-amber-400"></i> Pinpoint GPS</span>
+      </div>
+    </div>
+
+    <!-- RIGHT SIDE: Multi-Step Registration / Login & Authenticated Dashboard -->
+    <div class="lg:col-span-7">
+
+      <!-- ============================================== -->
+      <!-- VIEW A: ONBOARDING CONTAINER (REGISTER & LOGIN) -->
+      <!-- ============================================== -->
+      <div id="onboarding-flow-card" class="glass-panel p-6 sm:p-8 rounded-3xl border border-gray-800/90 shadow-2xl relative">
+        
+        <!-- Step Indicators -->
+        <div class="flex items-center justify-between border-b border-gray-800/80 pb-4 mb-6">
+          <div class="flex items-center space-x-2">
+            <div id="step-badge-1" class="w-7 h-7 rounded-full bg-brand-orange text-white flex items-center justify-center font-bold text-xs">1</div>
+            <span id="step-label-1" class="text-xs font-bold text-white">Your Information</span>
+          </div>
+          <div class="w-12 h-0.5 bg-gray-800">
+            <div id="step-connector" class="h-full bg-brand-orange w-0 transition-all duration-300"></div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <div id="step-badge-2" class="w-7 h-7 rounded-full bg-gray-800 text-gray-400 flex items-center justify-center font-bold text-xs">2</div>
+            <span id="step-label-2" class="text-xs font-semibold text-gray-400">Verification</span>
+          </div>
+        </div>
+
+        <!-- Mode Toggle: Register vs Login -->
+        <div id="auth-mode-switch" class="flex p-1 rounded-xl bg-gray-900 border border-gray-800 mb-6">
+          <button type="button" onclick="setAuthMode('register')" id="tab-register" class="flex-1 py-2 text-xs font-bold rounded-lg bg-brand-orange text-white transition shadow">
+            Sign Up / Register
+          </button>
+          <button type="button" onclick="setAuthMode('login')" id="tab-login" class="flex-1 py-2 text-xs font-medium text-gray-400 hover:text-white rounded-lg transition">
+            Sign In / Login
+          </button>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- STEP 1: REGISTRATION & LOGIN FORM          -->
+        <!-- ========================================== -->
+        <div id="step-1-container">
+          <form onsubmit="handleDetailsSubmit(event)" class="space-y-4">
+
+            <!-- Full Name (Only for registration) -->
+            <div id="field-name-group">
+              <label class="block text-xs font-bold text-gray-300 mb-1">
+                Full Name <span class="text-brand-orange">*</span>
+              </label>
+              <div class="relative">
+                <i class="fa-regular fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-xs"></i>
+                <input 
+                  id="input-name" 
+                  type="text" 
+                  placeholder="e.g. Ramesh Varma" 
+                  class="w-full bg-[#101217] border border-gray-700 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange transition"
+                >
+              </div>
+              <p id="err-name" class="text-[10px] text-rose-400 hidden mt-1">Please enter your full name.</p>
+            </div>
+
+            <!-- Mobile Number & Email in 2 columns -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-gray-300 mb-1">
+                  Mobile Number <span class="text-brand-orange">*</span>
+                </label>
+                <div class="relative">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 border-r border-gray-700 pr-2">+91</span>
+                  <input 
+                    id="input-phone" 
+                    type="tel" 
+                    maxlength="10" 
+                    placeholder="98765 43210" 
+                    class="w-full bg-[#101217] border border-gray-700 rounded-xl pl-14 pr-3 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange transition font-mono"
+                  >
+                </div>
+                <p id="err-phone" class="text-[10px] text-rose-400 hidden mt-1">Enter valid 10-digit mobile number.</p>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-gray-300 mb-1">
+                  Email Address <span class="text-brand-orange">*</span>
+                </label>
+                <div class="relative">
+                  <i class="fa-regular fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-xs"></i>
+                  <input 
+                    id="input-email" 
+                    type="email" 
+                    placeholder="name@example.com" 
+                    class="w-full bg-[#101217] border border-gray-700 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange transition"
+                  >
+                </div>
+                <p id="err-email" class="text-[10px] text-rose-400 hidden mt-1">Enter a valid email address.</p>
+              </div>
+            </div>
+
+            <!-- Delivery Zone Switcher: Urban Express vs Rural Hub -->
+            <div>
+              <label class="block text-xs font-bold text-gray-300 mb-1">Delivery Fulfillment Zone</label>
+              <div class="grid grid-cols-2 gap-2">
+                <label id="zone-opt-urban" class="p-2.5 rounded-xl border border-brand-orange bg-brand-orange/10 cursor-pointer flex items-center space-x-2 transition">
+                  <input type="radio" name="delivery-zone" value="urban" checked onchange="handleZoneChange('urban')" class="text-brand-orange focus:ring-0">
+                  <div>
+                    <span class="text-xs font-bold text-white block">Urban Express</span>
+                    <span class="text-[10px] text-emerald-400">10-15 Min Dark Store</span>
+                  </div>
+                </label>
+
+                <label id="zone-opt-rural" class="p-2.5 rounded-xl border border-gray-800 bg-[#101217] cursor-pointer flex items-center space-x-2 hover:border-gray-700 transition">
+                  <input type="radio" name="delivery-zone" value="rural" onchange="handleZoneChange('rural')" class="text-brand-orange focus:ring-0">
+                  <div>
+                    <span class="text-xs font-bold text-white block">Rural Village Hub</span>
+                    <span class="text-[10px] text-amber-400">Gram-Panchayat Depot</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Live Geolocation & Address Section (Blinkit Style) -->
+            <div class="pt-2 border-t border-gray-800/80 space-y-3">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h4 class="text-xs font-bold text-white flex items-center gap-1.5">
+                    <i class="fa-solid fa-crosshairs text-brand-orange"></i> Live Delivery Address
+                  </h4>
+                  <p class="text-[10px] text-gray-400">Auto-locate or drag the map pin to pinpoint your entrance</p>
+                </div>
+                
+                <!-- Blinkit style GPS button -->
+                <button 
+                  type="button" 
+                  onclick="triggerLiveGPS()" 
+                  id="btn-gps-trigger" 
+                  class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 text-white font-bold text-xs shadow-md flex items-center justify-center gap-1.5 transition active:scale-95"
+                >
+                  <i class="fa-solid fa-location-crosshairs animate-pulse"></i>
+                  <span>Use Current Location</span>
+                </button>
+              </div>
+
+              <!-- Interactive Leaflet Map Box -->
+              <div class="relative w-full h-44 rounded-2xl overflow-hidden border border-gray-700 shadow-inner">
+                <div id="leaflet-map" class="w-full h-full"></div>
+                <div id="map-locating-badge" class="hidden absolute top-2 right-2 z-[1000] bg-gray-900/90 text-brand-orange text-[10px] font-bold px-2 py-1 rounded-lg border border-brand-orange/40 flex items-center gap-1 backdrop-blur-sm">
+                  <i class="fa-solid fa-spinner fa-spin"></i> Fetching GPS Coordinates...
+                </div>
+              </div>
+
+              <!-- Reverse-Geocoded Address Display -->
+              <div>
+                <label class="block text-[11px] font-bold text-gray-400 mb-1">Detected GPS Address</label>
+                <div class="relative">
+                  <i class="fa-solid fa-map-location-dot absolute left-3 top-2.5 text-brand-orange text-xs"></i>
+                  <textarea 
+                    id="input-address-full" 
+                    rows="2" 
+                    placeholder="Click 'Use Current Location' or enter your full street address..." 
+                    class="w-full bg-[#101217] border border-gray-700 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange transition"
+                  ></textarea>
+                </div>
+              </div>
+
+              <!-- House No & Landmark/PIN fields -->
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <input 
+                    id="input-house" 
+                    type="text" 
+                    placeholder="Flat / House / Suite No." 
+                    class="w-full bg-[#101217] border border-gray-700 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-orange"
+                  >
+                </div>
+                <div>
+                  <input 
+                    id="input-pincode" 
+                    type="text" 
+                    placeholder="PIN Code (e.g. 500081)" 
+                    class="w-full bg-[#101217] border border-gray-700 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-orange font-mono"
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- OTP Channel Selection Option -->
+            <div class="pt-2 border-t border-gray-800/80">
+              <label class="block text-xs font-bold text-gray-300 mb-1.5">Deliver 6-Digit OTP via:</label>
+              <div class="grid grid-cols-2 gap-2">
+                <label id="channel-opt-phone" class="p-2.5 rounded-xl border border-brand-orange bg-brand-orange/10 cursor-pointer flex items-center space-x-2 transition">
+                  <input type="radio" name="otp-channel" value="phone" checked class="text-brand-orange focus:ring-0">
+                  <span class="text-xs font-bold text-white flex items-center gap-1.5"><i class="fa-solid fa-comment-sms text-brand-orange"></i> SMS to Phone</span>
+                </label>
+                <label id="channel-opt-email" class="p-2.5 rounded-xl border border-gray-800 bg-[#101217] cursor-pointer flex items-center space-x-2 hover:border-gray-700 transition">
+                  <input type="radio" name="otp-channel" value="email" class="text-brand-orange focus:ring-0">
+                  <span class="text-xs font-bold text-white flex items-center gap-1.5"><i class="fa-regular fa-envelope text-gray-400"></i> Secure Email</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Action Button -->
+            <button 
+              type="submit" 
+              id="btn-submit-step1" 
+              class="w-full mt-3 py-3 rounded-xl bg-gradient-to-r from-brand-orange to-orange-600 hover:brightness-110 text-white font-bold text-xs sm:text-sm shadow-lg shadow-brand-orange/30 transition transform active:scale-95 flex items-center justify-center gap-2"
+            >
+              <span id="btn-label-step1">Send Verification Code</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </form>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- STEP 2: 6-DIGIT OTP VERIFICATION FLOW      -->
+        <!-- ========================================== -->
+        <div id="step-2-container" class="hidden space-y-6">
+          <div class="text-center space-y-1">
+            <div class="w-12 h-12 rounded-2xl bg-brand-orange/20 text-brand-orange flex items-center justify-center mx-auto text-xl mb-2">
+              <i class="fa-solid fa-key"></i>
+            </div>
+            <h3 class="text-lg font-black font-display text-white">Enter 6-Digit Code</h3>
+            <p id="otp-recipient-desc" class="text-xs text-gray-400">
+              We sent a verification passcode to <span class="font-bold text-white font-mono">+91 98765 43210</span>
+            </p>
+          </div>
+
+          <!-- 6-digit box inputs with auto-advance and backspace support -->
+          <div class="flex justify-center items-center gap-2 sm:gap-3 py-2">
+            <input type="text" maxlength="1" class="otp-digit w-10 sm:w-12 h-12 sm:h-14 text-center text-lg sm:text-xl font-black font-mono bg-gray-900 border-2 border-gray-700 rounded-xl text-white focus:outline-none focus:border-brand-orange transition" autofocus>
+            <input type="text" maxlength="1" class="otp-digit w-10 sm:w-12 h-12 sm:h-14 text-center text-lg sm:text-xl font-black font-mono bg-gray-900 border-2 border-gray-700 rounded-xl text-white focus:outline-none focus:border-brand-orange transition">
+            <input type="text" maxlength="1" class="otp-digit w-10 sm:w-12 h-12 sm:h-14 text-center text-lg sm:text-xl font-black font-mono bg-gray-900 border-2 border-gray-700 rounded-xl text-white focus:outline-none focus:border-brand-orange transition">
+            <input type="text" maxlength="1" class="otp-digit w-10 sm:w-12 h-12 sm:h-14 text-center text-lg sm:text-xl font-black font-mono bg-gray-900 border-2 border-gray-700 rounded-xl text-white focus:outline-none focus:border-brand-orange transition">
+            <input type="text" maxlength="1" class="otp-digit w-10 sm:w-12 h-12 sm:h-14 text-center text-lg sm:text-xl font-black font-mono bg-gray-900 border-2 border-gray-700 rounded-xl text-white focus:outline-none focus:border-brand-orange transition">
+            <input type="text" maxlength="1" class="otp-digit w-10 sm:w-12 h-12 sm:h-14 text-center text-lg sm:text-xl font-black font-mono bg-gray-900 border-2 border-gray-700 rounded-xl text-white focus:outline-none focus:border-brand-orange transition">
+          </div>
+
+          <!-- Timer & Resend -->
+          <div class="flex items-center justify-between text-xs px-2">
+            <button type="button" onclick="goToStep(1)" class="text-gray-400 hover:text-white flex items-center gap-1">
+              <i class="fa-solid fa-arrow-left"></i> Edit Details
+            </button>
+
+            <div>
+              <span id="otp-timer-label" class="text-gray-400">Resend in: <strong id="otp-countdown" class="text-brand-orange font-mono">59s</strong></span>
+              <button id="btn-resend-otp" onclick="resendOTP()" class="hidden text-brand-orange hover:underline font-bold">
+                Resend Code
+              </button>
+            </div>
+          </div>
+
+          <!-- Verify Button -->
+          <button 
+            type="button" 
+            onclick="verifyOTPCode()" 
+            id="btn-verify-otp" 
+            class="w-full py-3 rounded-xl bg-brand-orange hover:bg-brand-hover text-white font-bold text-xs sm:text-sm shadow-lg shadow-brand-orange/30 transition transform active:scale-95 flex items-center justify-center gap-2"
+          >
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Confirm & Enter 23E NeeDs</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- ============================================== -->
+      <!-- VIEW B: AUTHENTICATED CUSTOMER PROFILE HUB     -->
+      <!-- ============================================== -->
+      <div id="user-dashboard-view" class="hidden space-y-6">
+        
+        <!-- Welcome Banner -->
+        <div class="glass-panel p-6 rounded-3xl border border-brand-orange/30 bg-gradient-to-r from-gray-900 via-[#181c25] to-gray-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div class="flex items-center space-x-3">
+            <div class="w-14 h-14 rounded-2xl bg-brand-orange text-white flex items-center justify-center font-black text-2xl shadow-lg shadow-brand-orange/30">
+              <span id="user-avatar-initials">RV</span>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 id="dash-user-name" class="text-xl font-black font-display text-white">Ramesh Varma</h3>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-bold">✓ Verified Customer</span>
+              </div>
+              <p id="dash-user-contact" class="text-xs text-gray-400 font-mono mt-0.5">+91 98765 43210 • ramesh@example.com</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="handleLogout()" class="px-3.5 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-bold transition flex items-center gap-1.5 border border-gray-700">
+              <i class="fa-solid fa-arrow-right-from-bracket text-rose-400"></i> Logout
+            </button>
+          </div>
+        </div>
+
+        <!-- Current Delivery Zone Status Card -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="glass-card p-4 rounded-2xl">
+            <p class="text-[11px] text-gray-400 font-medium">Active Delivery Mode</p>
+            <h4 id="dash-zone-title" class="text-sm font-bold text-white mt-1 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+              Urban Express (10m)
+            </h4>
+            <p id="dash-zone-desc" class="text-[10px] text-gray-500 mt-1">Dark store: Hyderabad Madhapur Node</p>
+          </div>
+
+          <div class="glass-card p-4 rounded-2xl">
+            <p class="text-[11px] text-gray-400 font-medium">23E Cash / Wallet Balance</p>
+            <h4 class="text-base font-black font-display text-brand-orange mt-1">₹150.00</h4>
+            <p class="text-[10px] text-emerald-400 mt-1">₹50 Onboarding bonus credited</p>
+          </div>
+
+          <div class="glass-card p-4 rounded-2xl">
+            <p class="text-[11px] text-gray-400 font-medium">Default Delivery Address</p>
+            <h4 id="dash-pincode-badge" class="text-xs font-bold text-white mt-1 font-mono">PIN: 500081</h4>
+            <p id="dash-short-address" class="text-[10px] text-gray-400 truncate mt-1">Hitech City, Hyderabad</p>
+          </div>
+        </div>
+
+        <!-- Saved Addresses Directory -->
+        <div class="glass-card p-6 rounded-3xl border border-gray-800 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h4 class="text-sm font-bold text-white">Your Saved Delivery Addresses</h4>
+              <p class="text-xs text-gray-400">Manage delivery locations for city flat and village residence</p>
+            </div>
+            <button onclick="promptAddNewAddress()" class="px-3 py-1.5 rounded-xl bg-brand-orange/20 text-brand-orange hover:bg-brand-orange hover:text-white text-xs font-bold transition flex items-center gap-1">
+              <i class="fa-solid fa-plus text-[10px]"></i> Add Address
+            </button>
+          </div>
+
+          <div id="saved-addresses-list" class="space-y-2.5">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-gray-800/80 bg-[#0a0b0e] py-4 text-center text-xs text-gray-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="text-white font-bold">23E NeeDs</span>
+        <span>•</span>
+        <span>Urban 10-Minute Dark Store & Rural Panchayat Hub Commerce</span>
+      </div>
+      <div>
+        <span>Hyperlocal GPS Engine • Instant OTP Auth</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Notification Box -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 pointer-events-none transition-all duration-300 flex items-center space-x-3 px-4 py-3 rounded-2xl bg-gray-900 text-white text-xs border border-brand-orange shadow-2xl">
+    <div id="toast-icon" class="text-brand-orange text-base">
+      <i class="fa-solid fa-circle-check"></i>
+    </div>
+    <span id="toast-message" class="font-semibold">Operation completed</span>
+  </div>
+
+  <script>
+    /* Application State */
+    const appData = {
+      authMode: 'register', // 'register' or 'login'
+      currentStep: 1,
+      currentUser: null,
+      generatedOTP: '123456',
+      otpChannel: 'phone',
+      timerCountdown: 60,
+      timerInterval: null,
+      location: {
+        lat: 17.4483, // Default Hyderabad Coordinates
+        lng: 78.3742,
+        address: 'Madhapur, Hitech City, Hyderabad, Telangana',
+        house: '',
+        pincode: '500081',
+        zone: 'urban'
+      },
+      savedAddresses: [
+        {
+          id: 1,
+          tag: 'Home (Urban)',
+          address: 'Flat 402, Cyber Heights, Madhapur, Hyderabad, 500081',
+          zone: 'urban',
+          isDefault: true
+        },
+        {
+          id: 2,
+          tag: 'Rural Farm Hub',
+          address: 'Panchayat Road, Kothur Village Center, Rangareddy, 509228',
+          zone: 'rural',
+          isDefault: false
+        }
+      ]
+    };
+
+    /* 3D Floating Parcel Badge (Three.js) */
+    let heroScene, heroCamera, heroRenderer, heroParcelGroup;
+    function init3DHero() {
+      const container = document.getElementById('three-hero-container');
+      if (!container) return;
+
+      const w = container.clientWidth || 360;
+      const h = container.clientHeight || 224;
+
+      heroScene = new THREE.Scene();
+      heroCamera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000);
+      heroCamera.position.set(0, 1.2, 4.2);
+      heroCamera.lookAt(0, 0, 0);
+
+      heroRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      heroRenderer.setSize(w, h);
+      heroRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      container.appendChild(heroRenderer.domElement);
+
+      heroParcelGroup = new THREE.Group();
+      heroScene.add(heroParcelGroup);
+
+      // Package Box
+      const boxGeo = new THREE.BoxGeometry(1.4, 1.4, 1.4);
+      const boxMat = new THREE.MeshStandardMaterial({
+        color: 0x1b1e26,
+        roughness: 0.3,
+        metalness: 0.2
+      });
+      const boxMesh = new THREE.Mesh(boxGeo, boxMat);
+      heroParcelGroup.add(boxMesh);
+
+      // Orange 23E NeeDs Band
+      const bandGeo = new THREE.BoxGeometry(1.42, 0.24, 1.42);
+      const bandMat = new THREE.MeshStandardMaterial({
+        color: 0xFF5A00,
+        emissive: 0x662200,
+        roughness: 0.2
+      });
+      const bandMesh = new THREE.Mesh(bandGeo, bandMat);
+      heroParcelGroup.add(bandMesh);
+
+      // Floating Location Pin Top (Cone + Sphere)
+      const pinTopGeo = new THREE.SphereGeometry(0.22, 16, 16);
+      const pinMat = new THREE.MeshStandardMaterial({ color: 0xFF5A00, emissive: 0x441100 });
+      const pinTop = new THREE.Mesh(pinTopGeo, pinMat);
+      pinTop.position.set(0, 1.2, 0);
+      heroParcelGroup.add(pinTop);
+
+      const pinConeGeo = new THREE.ConeGeometry(0.18, 0.35, 16);
+      const pinCone = new THREE.Mesh(pinConeGeo, pinMat);
+      pinCone.position.set(0, 0.95, 0);
+      pinCone.rotation.x = Math.PI;
+      heroParcelGroup.add(pinCone);
+
+      // Lighting
+      const ambLight = new THREE.AmbientLight(0xffffff, 0.9);
+      heroScene.add(ambLight);
+
+      const dirLight = new THREE.DirectionalLight(0xffffff, 1.4);
+      dirLight.position.set(5, 7, 5);
+      heroScene.add(dirLight);
+
+      const pointLight = new THREE.PointLight(0xFF5A00, 2, 8);
+      pointLight.position.set(-2, 2, 2);
+      heroScene.add(pointLight);
+
+      function animate() {
+        requestAnimationFrame(animate);
+        if (heroParcelGroup) {
+          heroParcelGroup.rotation.y += 0.015;
+          heroParcelGroup.position.y = Math.sin(Date.now() * 0.002) * 0.06;
+        }
+        heroRenderer.render(heroScene, heroCamera);
+      }
+      animate();
+
+      window.addEventListener('resize', () => {
+        if (!container || !heroRenderer || !heroCamera) return;
+        const newW = container.clientWidth;
+        const newH = container.clientHeight;
+        heroCamera.aspect = newW / newH;
+        heroCamera.updateProjectionMatrix();
+        heroRenderer.setSize(newW, newH);
+      });
+    }
+
+    /* Leaflet Map & Geolocation Engine */
+    let mapInstance = null;
+    let mapMarker = null;
+
+    function initLeafletMap() {
+      const mapEl = document.getElementById('leaflet-map');
+      if (!mapEl) return;
+
+      mapInstance = L.map('leaflet-map', {
+        zoomControl: false,
+        attributionControl: false
+      }).setView([appData.location.lat, appData.location.lng], 15);
+
+      // OpenStreetMap Tile Layer
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19
+      }).addTo(mapInstance);
+
+      // Custom 23E Branded Pin Marker Icon
+      const customPin = L.divIcon({
+        className: 'custom-pin-marker',
+        html: `
+          <div style="transform: translate(-50%, -100%);">
+            <div style="background-color: #FF5A00; color: white; width: 34px; height: 34px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(255,90,0,0.5); border: 2px solid white;">
+              <i class="fa-solid fa-house" style="transform: rotate(45deg); font-size: 14px;"></i>
+            </div>
+          </div>
+        `,
+        iconSize: [34, 34],
+        iconAnchor: [17, 34]
+      });
+
+      mapMarker = L.marker([appData.location.lat, appData.location.lng], {
+        draggable: true,
+        icon: customPin
+      }).addTo(mapInstance);
+
+      mapMarker.bindPopup("<b>Deliver Here</b><br>Pinpoint your exact house gate").openPopup();
+
+      // Drag event to fine-tune exact entry location
+      mapMarker.on('dragend', function (event) {
+        const position = mapMarker.getLatLng();
+        appData.location.lat = position.lat;
+        appData.location.lng = position.lng;
+        reverseGeocode(position.lat, position.lng);
+      });
+
+      // Map click moves marker
+      mapInstance.on('click', function(e) {
+        mapMarker.setLatLng(e.latlng);
+        appData.location.lat = e.latlng.lat;
+        appData.location.lng = e.latlng.lng;
+        reverseGeocode(e.latlng.lat, e.latlng.lng);
+      });
+    }
+
+    /* Reverse Geocoding with OpenStreetMap Nominatim */
+    async function reverseGeocode(lat, lng) {
+      const badge = document.getElementById('map-locating-badge');
+      if (badge) badge.classList.remove('hidden');
+
+      try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+        const data = await response.json();
+        
+        if (data && data.display_name) {
+          appData.location.address = data.display_name;
+          const addressBox = document.getElementById('input-address-full');
+          if (addressBox) addressBox.value = data.display_name;
+
+          if (data.address && data.address.postcode) {
+            appData.location.pincode = data.address.postcode;
+            const pinBox = document.getElementById('input-pincode');
+            if (pinBox) pinBox.value = data.address.postcode;
+          }
+          showToast('GPS location updated to map pin');
+        }
+      } catch (err) {
+        console.warn('Reverse geocode fallback:', err);
+      } finally {
+        if (badge) badge.classList.add('hidden');
+      }
+    }
+
+    /* Blinkit-Style Live Current Location Trigger */
+    function triggerLiveGPS() {
+      const btn = document.getElementById('btn-gps-trigger');
+      const badge = document.getElementById('map-locating-badge');
+      if (badge) badge.classList.remove('hidden');
+
+      if (!navigator.geolocation) {
+        showToast('Geolocation is not supported by your browser.');
+        if (badge) badge.classList.add('hidden');
+        return;
+      }
+
+      btn.classList.add('opacity-75', 'pointer-events-none');
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>Locating...</span>`;
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          appData.location.lat = lat;
+          appData.location.lng = lng;
+
+          if (mapInstance && mapMarker) {
+            mapInstance.setView([lat, lng], 17);
+            mapMarker.setLatLng([lat, lng]);
+          }
+
+          reverseGeocode(lat, lng);
+
+          btn.classList.remove('opacity-75', 'pointer-events-none');
+          btn.innerHTML = `<i class="fa-solid fa-circle-check text-white"></i><span>Located!</span>`;
+          setTimeout(() => {
+            btn.innerHTML = `<i class="fa-solid fa-location-crosshairs"></i><span>Use Current Location</span>`;
+          }, 2500);
+        },
+        (error) => {
+          showToast('Unable to retrieve GPS. Please check location permissions.');
+          btn.classList.remove('opacity-75', 'pointer-events-none');
+          btn.innerHTML = `<i class="fa-solid fa-location-crosshairs"></i><span>Use Current Location</span>`;
+          if (badge) badge.classList.add('hidden');
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    }
+
+    /* Auth Mode Toggle */
+    function setAuthMode(mode) {
+      appData.authMode = mode;
+      const tabReg = document.getElementById('tab-register');
+      const tabLog = document.getElementById('tab-login');
+      const fieldName = document.getElementById('field-name-group');
+      const btnLabel = document.getElementById('btn-label-step1');
+
+      if (mode === 'register') {
+        tabReg.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-brand-orange text-white transition shadow";
+        tabLog.className = "flex-1 py-2 text-xs font-medium text-gray-400 hover:text-white rounded-lg transition";
+        fieldName.classList.remove('hidden');
+        btnLabel.innerText = "Send Verification Code";
+      } else {
+        tabLog.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-brand-orange text-white transition shadow";
+        tabReg.className = "flex-1 py-2 text-xs font-medium text-gray-400 hover:text-white rounded-lg transition";
+        fieldName.classList.add('hidden');
+        btnLabel.innerText = "Request Login OTP";
+      }
+    }
+
+    function handleZoneChange(zone) {
+      appData.location.zone = zone;
+      const optUrban = document.getElementById('zone-opt-urban');
+      const optRural = document.getElementById('zone-opt-rural');
+
+      if (zone === 'urban') {
+        optUrban.className = "p-2.5 rounded-xl border border-brand-orange bg-brand-orange/10 cursor-pointer flex items-center space-x-2 transition";
+        optRural.className = "p-2.5 rounded-xl border border-gray-800 bg-[#101217] cursor-pointer flex items-center space-x-2 hover:border-gray-700 transition";
+        showToast('Zone: Urban 10-Min Dark Store Mode');
+      } else {
+        optRural.className = "p-2.5 rounded-xl border border-brand-orange bg-brand-orange/10 cursor-pointer flex items-center space-x-2 transition";
+        optUrban.className = "p-2.5 rounded-xl border border-gray-800 bg-[#101217] cursor-pointer flex items-center space-x-2 hover:border-gray-700 transition";
+        showToast('Zone: Rural Village Gram-Panchayat Hub');
+      }
+    }
+
+    /* Submit Step 1 Details */
+    function handleDetailsSubmit(e) {
+      e.preventDefault();
+
+      const nameVal = document.getElementById('input-name').value.trim();
+      const phoneVal = document.getElementById('input-phone').value.trim();
+      const emailVal = document.getElementById('input-email').value.trim();
+      const houseVal = document.getElementById('input-house').value.trim();
+      const pinVal = document.getElementById('input-pincode').value.trim();
+      const addrVal = document.getElementById('input-address-full').value.trim();
+
+      // Reset errors
+      document.getElementById('err-name').classList.add('hidden');
+      document.getElementById('err-phone').classList.add('hidden');
+      document.getElementById('err-email').classList.add('hidden');
+
+      let hasError = false;
+
+      if (appData.authMode === 'register' && nameVal.length < 2) {
+        document.getElementById('err-name').classList.remove('hidden');
+        hasError = true;
+      }
+
+      if (!/^\d{10}$/.test(phoneVal)) {
+        document.getElementById('err-phone').classList.remove('hidden');
+        hasError = true;
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+        document.getElementById('err-email').classList.remove('hidden');
+        hasError = true;
+      }
+
+      if (hasError) return;
+
+      // Detect OTP channel
+      const selectedChannel = document.querySelector('input[name="otp-channel"]:checked').value;
+      appData.otpChannel = selectedChannel;
+
+      // Save user payload
+      appData.currentUser = {
+        name: appData.authMode === 'register' ? nameVal : 'Registered User',
+        phone: phoneVal,
+        email: emailVal,
+        address: addrVal || 'Madhapur, Hitech City, Hyderabad',
+        house: houseVal,
+        pincode: pinVal || '500081',
+        zone: appData.location.zone
+      };
+
+      // Generate Random 6-Digit OTP
+      appData.generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+
+      // Update OTP Recipient Description text
+      const desc = document.getElementById('otp-recipient-desc');
+      if (selectedChannel === 'phone') {
+        desc.innerHTML = `We sent a 6-digit OTP via SMS to <span class="font-bold text-white font-mono">+91 ${phoneVal}</span>`;
+      } else {
+        desc.innerHTML = `We sent a 6-digit OTP via Email to <span class="font-bold text-white font-mono">${emailVal}</span>`;
+      }
+
+      // Display Simulated OTP Banner
+      triggerMockOTPNotification();
+
+      // Proceed to Step 2
+      goToStep(2);
+      startOTPTimer();
+    }
+
+    function triggerMockOTPNotification() {
+      const banner = document.getElementById('simulated-otp-banner');
+      const otpDisplay = document.getElementById('mock-otp-display');
+      const icon = document.getElementById('otp-channel-icon');
+      const title = document.getElementById('otp-channel-title');
+
+      if (!banner) return;
+
+      otpDisplay.innerText = appData.generatedOTP;
+
+      if (appData.otpChannel === 'phone') {
+        icon.className = "fa-solid fa-comment-sms";
+        title.innerText = "23E NeeDs SMS Gateway";
+      } else {
+        icon.className = "fa-regular fa-envelope";
+        title.innerText = "23E NeeDs Email Auth";
+      }
+
+      banner.classList.remove('hidden');
+    }
+
+    function autoFillMockOTP() {
+      const inputs = document.querySelectorAll('.otp-digit');
+      const code = appData.generatedOTP;
+      inputs.forEach((input, index) => {
+        input.value = code[index] || '';
+      });
+      showToast('OTP code auto-filled');
+      document.getElementById('simulated-otp-banner').classList.add('hidden');
+    }
+
+    /* Multi-step navigation */
+    function goToStep(step) {
+      appData.currentStep = step;
+      const step1 = document.getElementById('step-1-container');
+      const step2 = document.getElementById('step-2-container');
+      const authSwitcher = document.getElementById('auth-mode-switch');
+      const badge1 = document.getElementById('step-badge-1');
+      const badge2 = document.getElementById('step-badge-2');
+      const conn = document.getElementById('step-connector');
+
+      if (step === 1) {
+        step1.classList.remove('hidden');
+        step2.classList.add('hidden');
+        authSwitcher.classList.remove('hidden');
+        badge2.className = "w-7 h-7 rounded-full bg-gray-800 text-gray-400 flex items-center justify-center font-bold text-xs";
+        conn.style.width = "0%";
+      } else if (step === 2) {
+        step1.classList.add('hidden');
+        step2.classList.remove('hidden');
+        authSwitcher.classList.add('hidden');
+        badge2.className = "w-7 h-7 rounded-full bg-brand-orange text-white flex items-center justify-center font-bold text-xs";
+        conn.style.width = "100%";
+
+        // Clear previous input
+        const inputs = document.querySelectorAll('.otp-digit');
+        inputs.forEach(i => i.value = '');
+        inputs[0].focus();
+      }
+    }
+
+    /* OTP Inputs Auto-advance */
+    document.addEventListener('DOMContentLoaded', () => {
+      const inputs = document.querySelectorAll('.otp-digit');
+      inputs.forEach((input, index) => {
+        input.addEventListener('input', (e) => {
+          if (input.value.length === 1 && index < inputs.length - 1) {
+            inputs[index + 1].focus();
+          }
+        });
+
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Backspace' && input.value === '' && index > 0) {
+            inputs[index - 1].focus();
+          }
+        });
+
+        // Paste support for 6-digit code
+        input.addEventListener('paste', (e) => {
+          e.preventDefault();
+          const pasteData = (e.clipboardData || window.clipboardData).getData('text').trim();
+          if (/^\d{6}$/.test(pasteData)) {
+            pasteData.split('').forEach((char, i) => {
+              if (inputs[i]) inputs[i].value = char;
+            });
+            inputs[5].focus();
+          }
+        });
+      });
+    });
+
+    /* OTP Countdown Timer */
+    function startOTPTimer() {
+      clearInterval(appData.timerInterval);
+      appData.timerCountdown = 60;
+      const countEl = document.getElementById('otp-countdown');
+      const timerLabel = document.getElementById('otp-timer-label');
+      const resendBtn = document.getElementById('btn-resend-otp');
+
+      timerLabel.classList.remove('hidden');
+      resendBtn.classList.add('hidden');
+
+      appData.timerInterval = setInterval(() => {
+        appData.timerCountdown--;
+        if (countEl) countEl.innerText = `${appData.timerCountdown}s`;
+
+        if (appData.timerCountdown <= 0) {
+          clearInterval(appData.timerInterval);
+          timerLabel.classList.add('hidden');
+          resendBtn.classList.remove('hidden');
+        }
+      }, 1000);
+    }
+
+    function resendOTP() {
+      appData.generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+      triggerMockOTPNotification();
+      startOTPTimer();
+      showToast('New OTP dispatched!');
+    }
+
+    /* Verify OTP Submission */
+    function verifyOTPCode() {
+      const inputs = document.querySelectorAll('.otp-digit');
+      let enteredCode = '';
+      inputs.forEach(i => enteredCode += i.value.trim());
+
+      if (enteredCode.length < 6) {
+        showToast('Please enter all 6 digits.');
+        return;
+      }
+
+      if (enteredCode === appData.generatedOTP || enteredCode === '123456') {
+        clearInterval(appData.timerInterval);
+        document.getElementById('simulated-otp-banner').classList.add('hidden');
+
+        // Confetti Celebration
+        if (typeof confetti === 'function') {
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#FF5A00', '#10B981', '#F59E0B']
+          });
+        }
+
+        showToast('Verification successful! Welcome to 23E NeeDs.');
+        loadAuthenticatedDashboard();
+      } else {
+        showToast('Incorrect OTP. Try again or check the top banner.');
+      }
+    }
+
+    /* Switch to Authenticated Dashboard */
+    function loadAuthenticatedDashboard() {
+      const onboardingCard = document.getElementById('onboarding-flow-card');
+      const dashView = document.getElementById('user-dashboard-view');
+
+      if (onboardingCard) onboardingCard.classList.add('hidden');
+      if (dashView) dashView.classList.remove('hidden');
+
+      // Populate user info
+      const u = appData.currentUser;
+      if (!u) return;
+
+      document.getElementById('dash-user-name').innerText = u.name;
+      document.getElementById('dash-user-contact').innerText = `+91 ${u.phone} • ${u.email}`;
+      
+      const initials = u.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+      document.getElementById('user-avatar-initials').innerText = initials || '23E';
+
+      // Update Zone Badge
+      const zoneTitle = document.getElementById('dash-zone-title');
+      const zoneDesc = document.getElementById('dash-zone-desc');
+      if (u.zone === 'urban') {
+        zoneTitle.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Urban Express (10m)`;
+        zoneDesc.innerText = `Connected Dark Store: Hyderabad Hitech Hub-04`;
+      } else {
+        zoneTitle.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span> Rural Panchayat Hub`;
+        zoneDesc.innerText = `Connected Spoke: Kothur Gram Depot`;
+      }
+
+      document.getElementById('dash-pincode-badge').innerText = `PIN: ${u.pincode}`;
+      document.getElementById('dash-short-address').innerText = `${u.house ? u.house + ', ' : ''}${u.address}`;
+
+      // Insert the current address into saved addresses list
+      appData.savedAddresses.unshift({
+        id: Date.now(),
+        tag: u.zone === 'urban' ? 'Current (City)' : 'Current (Gram Panchayat)',
+        address: `${u.house ? u.house + ', ' : ''}${u.address} - PIN ${u.pincode}`,
+        zone: u.zone,
+        isDefault: true
+      });
+
+      renderSavedAddresses();
+    }
+
+    function renderSavedAddresses() {
+      const container = document.getElementById('saved-addresses-list');
+      if (!container) return;
+
+      container.innerHTML = appData.savedAddresses.map((addr, idx) => `
+        <div class="p-3.5 rounded-2xl bg-gray-900 border ${addr.isDefault ? 'border-brand-orange/60 bg-brand-orange/5' : 'border-gray-800'} flex items-start justify-between gap-3">
+          <div class="flex items-start space-x-3">
+            <div class="w-8 h-8 rounded-xl bg-gray-800 flex items-center justify-center text-brand-orange text-xs shrink-0 mt-0.5">
+              <i class="fa-solid fa-${addr.zone === 'urban' ? 'building' : 'wheat-awn'}"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-white">${addr.tag}</span>
+                ${addr.isDefault ? '<span class="text-[9px] px-1.5 py-0.2 rounded bg-brand-orange text-white font-bold uppercase">Default</span>' : ''}
+              </div>
+              <p class="text-[11px] text-gray-300 mt-0.5 line-clamp-2">${addr.address}</p>
+            </div>
+          </div>
+
+          <div class="shrink-0 flex items-center gap-2">
+            ${!addr.isDefault ? `
+              <button onclick="setDefaultAddress(${addr.id})" class="text-[10px] text-gray-400 hover:text-brand-orange font-semibold">Make Default</button>
+            ` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function setDefaultAddress(id) {
+      appData.savedAddresses.forEach(a => {
+        a.isDefault = a.id === id;
+      });
+      renderSavedAddresses();
+      showToast('Default delivery destination updated');
+    }
+
+    function promptAddNewAddress() {
+      const newTag = prompt("Enter Address Label (e.g. Office, Godown, Home):", "Work");
+      if (!newTag) return;
+      const newAddress = prompt("Enter Address / Landmark:", "Cyber Gateway, Level 2, Hyderabad");
+      if (!newAddress) return;
+
+      appData.savedAddresses.push({
+        id: Date.now(),
+        tag: newTag,
+        address: newAddress,
+        zone: 'urban',
+        isDefault: false
+      });
+      renderSavedAddresses();
+      showToast(`Address "${newTag}" saved successfully`);
+    }
+
+    function handleLogout() {
+      appData.currentUser = null;
+      document.getElementById('user-dashboard-view').classList.add('hidden');
+      document.getElementById('onboarding-flow-card').classList.remove('hidden');
+      goToStep(1);
+      showToast('Logged out of 23E NeeDs.');
+    }
+
+    /* Toast Notification Helper */
+    let toastTimeout;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-message');
+      if (!toast || !toastMsg) return;
+
+      toastMsg.innerText = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+      }, 3000);
+    }
+
+    /* Initialize Everything on Load */
+    window.onload = function () {
+      init3DHero();
+      initLeafletMap();
+      const addrBox = document.getElementById('input-address-full');
+      if (addrBox) addrBox.value = appData.location.address;
+    };
+  </script>
+</body>
+</html>
