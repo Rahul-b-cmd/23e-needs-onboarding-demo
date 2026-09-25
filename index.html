@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>23E NeeDs - Customer Registration, Login & Hyperlocal Location</title>
+  <title>23E NeeDs - Everything You Need | Urban & Rural Quick Commerce</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -35,20 +35,26 @@
               orange: '#FF5A00',
               hover: '#E54E00',
               glow: '#FFA066',
-              dark: '#0D0F12',
-              card: '#161920',
-              surface: '#1E222B',
-              border: '#2A303C'
+              dark: '#0A0C10',
+              card: '#141822',
+              surface: '#1A202C',
+              border: '#272E3D',
+              green: '#10B981'
             }
           },
           animation: {
             'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
             'float': 'float 4s ease-in-out infinite',
+            'slide-up': 'slideUp 0.3s ease-out forwards',
           },
           keyframes: {
             float: {
               '0%, 100%': { transform: 'translateY(0px)' },
               '50%': { transform: 'translateY(-6px)' },
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(100%)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
             }
           }
         }
@@ -58,53 +64,54 @@
 
   <style>
     body {
-      background-color: #090A0D;
+      background-color: #090B0E;
       color: #E6E8EC;
       overflow-x: hidden;
     }
     .glass-panel {
-      background: rgba(22, 25, 32, 0.85);
+      background: rgba(20, 24, 34, 0.88);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 90, 0, 0.12);
     }
     .glass-card {
-      background: rgba(30, 34, 43, 0.7);
+      background: rgba(26, 32, 44, 0.75);
       backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.06);
       transition: all 0.25s ease;
     }
     .glass-card:hover {
       border-color: rgba(255, 90, 0, 0.35);
     }
-    /* Leaflet dark theme customization */
     .leaflet-container {
       background-color: #12151c !important;
       font-family: 'Plus Jakarta Sans', sans-serif !important;
     }
     .leaflet-popup-content-wrapper {
-      background: #161920 !important;
+      background: #141822 !important;
       color: #fff !important;
       border: 1px solid #FF5A00 !important;
       border-radius: 12px !important;
       font-size: 11px !important;
     }
     .leaflet-popup-tip {
-      background: #161920 !important;
+      background: #141822 !important;
     }
-    /* Hide scrollbar */
-    ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-track { background: #0D0F12; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #0A0C10; }
     ::-webkit-scrollbar-thumb { background: #FF5A00; border-radius: 999px; }
   </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between selection:bg-brand-orange selection:text-white">
+<body class="min-h-screen flex flex-col justify-between selection:bg-brand-orange selection:text-white pb-20 sm:pb-0">
 
-  <header class="glass-panel sticky top-0 z-40 border-b border-gray-800/80">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+  <!-- ============================================== -->
+  <!-- TOP NAVIGATION BAR                             -->
+  <!-- ============================================== -->
+  <header class="glass-panel sticky top-0 z-40 border-b border-gray-800/90 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
       
       <!-- Brand Logo -->
-      <a href="#" class="flex items-center space-x-3 group">
+      <a href="javascript:void(0)" onclick="handleLogoClick()" class="flex items-center space-x-3 shrink-0 group">
         <div class="relative flex items-center justify-center w-10 h-10 rounded-xl bg-[#12141a] border border-gray-700/80 shadow-inner group-hover:border-brand-orange/60 transition">
           <div class="w-0 h-0 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent border-l-[14px] border-l-brand-orange group-hover:scale-110 transition transform"></div>
         </div>
@@ -118,21 +125,94 @@
         </div>
       </a>
 
-      <!-- Quick Context Indicator & Security Badge -->
+      <!-- Quick Hyperlocal Address Capsule (Visible When Logged In) -->
+      <div id="nav-location-capsule" class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-900 border border-gray-800 hover:border-brand-orange/50 transition cursor-pointer max-w-sm truncate" onclick="openProfileModal()">
+        <i class="fa-solid fa-location-dot text-brand-orange text-xs animate-bounce"></i>
+        <div class="text-left text-xs truncate">
+          <span id="nav-address-title" class="font-bold text-white block truncate leading-tight">Delivery in 10 Mins</span>
+          <span id="nav-address-detail" class="text-[10px] text-gray-400 block truncate">Detecting address...</span>
+        </div>
+        <i class="fa-solid fa-chevron-down text-[10px] text-gray-500 ml-1"></i>
+      </div>
+
+      <!-- Right Header Actions (Auth & Cart) -->
       <div class="flex items-center space-x-3">
-        <div class="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-800/50 text-[11px] text-emerald-400 font-semibold">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-          <span>Urban (10m) & Rural Gram-Panchayat Network</span>
+        <!-- Fulfillment Mode Toggle in Header (Urban / Rural) -->
+        <div id="header-zone-switch" class="hidden sm:flex items-center bg-gray-900 p-0.5 rounded-xl border border-gray-800 text-[11px]">
+          <button type="button" onclick="switchZone('urban')" id="hz-urban-btn" class="px-2.5 py-1 rounded-lg font-bold bg-brand-orange text-white transition">
+            ⚡ Urban (10m)
+          </button>
+          <button type="button" onclick="switchZone('rural')" id="hz-rural-btn" class="px-2.5 py-1 rounded-lg font-medium text-gray-400 hover:text-white transition">
+            🌾 Rural Hub
+          </button>
         </div>
-        <div class="text-xs text-gray-400 flex items-center gap-1">
-          <i class="fa-solid fa-shield-halved text-brand-orange"></i>
-          <span class="hidden md:inline">256-bit SSL Secure Auth</span>
+
+        <!-- User Profile Pill (Visible after sign-in) -->
+        <div id="nav-user-profile" class="hidden flex items-center space-x-2">
+          <button onclick="toggleProfileDropdown()" class="flex items-center space-x-2 p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 transition">
+            <div id="nav-avatar-icon" class="w-7 h-7 rounded-lg bg-brand-orange text-white flex items-center justify-center font-bold text-xs">
+              R
+            </div>
+            <div class="hidden md:block text-left">
+              <span id="nav-user-name" class="text-xs font-bold text-white block leading-tight">Rahul</span>
+              <span class="text-[9px] text-emerald-400 font-mono">₹<span id="nav-wallet-balance">150</span> Balance</span>
+            </div>
+            <i class="fa-solid fa-angle-down text-[10px] text-gray-400"></i>
+          </button>
         </div>
+
+        <!-- View Cart Header Button -->
+        <button 
+          id="nav-cart-btn" 
+          onclick="toggleCartDrawer(true)"
+          class="relative flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-brand-orange to-orange-600 hover:brightness-110 text-white font-bold text-xs shadow-lg shadow-brand-orange/20 transition transform active:scale-95"
+        >
+          <i class="fa-solid fa-cart-shopping"></i>
+          <span class="hidden sm:inline">My Cart</span>
+          <span id="nav-cart-count" class="px-1.5 py-0.2 rounded-full bg-white text-brand-orange text-[10px] font-black">0</span>
+          <span id="nav-cart-total-badge" class="hidden sm:inline font-mono font-bold text-xs border-l border-white/30 pl-2">₹0</span>
+        </button>
       </div>
     </div>
   </header>
 
-  <div id="simulated-otp-banner" class="hidden fixed top-16 left-1/2 transform -translate-x-1/2 z-50 w-11/12 max-w-md bg-gradient-to-r from-gray-900 to-[#1e222d] border-2 border-brand-orange p-3.5 rounded-2xl shadow-2xl animate-bounce">
+  <!-- User Account Dropdown -->
+  <div id="profile-dropdown-menu" class="hidden fixed top-16 right-4 sm:right-16 z-50 w-72 glass-panel p-4 rounded-2xl border border-gray-800 shadow-2xl">
+    <div class="flex items-center space-x-3 pb-3 border-b border-gray-800">
+      <div class="w-10 h-10 rounded-xl bg-brand-orange text-white flex items-center justify-center font-bold text-base">
+        <span id="drop-avatar-initial">R</span>
+      </div>
+      <div class="overflow-hidden">
+        <h4 id="drop-user-name" class="text-xs font-bold text-white truncate">Rahul</h4>
+        <p id="drop-user-phone" class="text-[10px] text-gray-400 font-mono truncate">+91 98765 43210</p>
+        <span class="inline-block mt-0.5 text-[9px] px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">Verified 23E Member</span>
+      </div>
+    </div>
+    
+    <div class="py-2.5 space-y-1 text-xs">
+      <div class="flex justify-between items-center p-2 rounded-xl bg-gray-900/60 border border-gray-800/80">
+        <span class="text-gray-400">23E Cash Balance</span>
+        <span class="font-mono font-bold text-brand-orange">₹<span id="drop-wallet-amount">150.00</span></span>
+      </div>
+      <button onclick="openProfileModal(); toggleProfileDropdown();" class="w-full text-left p-2 rounded-lg text-gray-300 hover:bg-gray-800 flex items-center gap-2">
+        <i class="fa-solid fa-address-card text-brand-orange text-xs w-4"></i> Manage Saved Addresses
+      </button>
+      <button onclick="toggleOrdersModal(); toggleProfileDropdown();" class="w-full text-left p-2 rounded-lg text-gray-300 hover:bg-gray-800 flex items-center gap-2">
+        <i class="fa-solid fa-clock-rotate-left text-brand-orange text-xs w-4"></i> Past Orders & Tracking
+      </button>
+    </div>
+
+    <div class="pt-2 border-t border-gray-800">
+      <button onclick="handleLogout()" class="w-full py-2 rounded-xl bg-rose-950/40 hover:bg-rose-900/50 text-rose-400 font-bold text-xs flex items-center justify-center gap-1.5 transition">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- SIMULATED OTP TOAST NOTIFIER                   -->
+  <!-- ============================================== -->
+  <div id="simulated-otp-banner" class="hidden fixed top-16 left-1/2 transform -translate-x-1/2 z-50 w-11/12 max-w-md bg-gradient-to-r from-gray-900 via-[#1e222d] to-gray-900 border-2 border-brand-orange p-3.5 rounded-2xl shadow-2xl animate-bounce">
     <div class="flex items-start justify-between gap-3">
       <div class="flex items-center gap-2.5">
         <div class="w-8 h-8 rounded-xl bg-brand-orange text-white flex items-center justify-center font-bold text-sm shrink-0">
@@ -140,7 +220,7 @@
         </div>
         <div>
           <p id="otp-channel-title" class="text-xs font-bold text-white">23E NeeDs OTP Verification</p>
-          <p class="text-[11px] text-gray-300">Your single-use passcode is: <span id="mock-otp-display" class="font-mono font-black text-brand-orange text-sm px-1.5 py-0.5 bg-brand-dark rounded border border-brand-orange/40">123456</span></p>
+          <p class="text-[11px] text-gray-300">Demo verification passcode: <span id="mock-otp-display" class="font-mono font-black text-brand-orange text-sm px-1.5 py-0.5 bg-brand-dark rounded border border-brand-orange/40">123456</span></p>
         </div>
       </div>
       <button onclick="autoFillMockOTP()" class="text-[10px] px-2.5 py-1 rounded-lg bg-brand-orange text-white font-bold hover:brightness-110 shrink-0">
@@ -149,30 +229,32 @@
     </div>
   </div>
 
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+  <!-- ============================================== -->
+  <!-- VIEW 1: REGISTRATION & LOGIN WITH GPS (PRE-AUTH)-->
+  <!-- ============================================== -->
+  <section id="auth-section-view" class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
     
-    <!-- LEFT SIDE: 3D Interactive Hero Card & Feature Pillars -->
+    <!-- LEFT SIDE: 3D Interactive Hero Card -->
     <div class="lg:col-span-5 space-y-6">
       <div class="glass-panel p-6 sm:p-7 rounded-3xl border border-gray-800/80 relative overflow-hidden">
-        <!-- Ambient lighting -->
         <div class="absolute -top-16 -left-16 w-60 h-60 bg-brand-orange/20 rounded-full blur-3xl pointer-events-none"></div>
 
         <div class="relative z-10">
           <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-orange/15 border border-brand-orange/30 text-brand-orange text-xs font-bold mb-3">
-            <i class="fa-solid fa-location-dot"></i> Blinkit-Grade Location Intelligence
+            <i class="fa-solid fa-bolt"></i> Blinkit-Grade Quick Delivery
           </div>
           <h1 class="text-2xl sm:text-3xl font-black font-display text-white tracking-tight leading-tight">
-            Instant Delivery to Your Exact Doorstep & Farm Hub.
+            Instant Delivery to Your Doorstep & Village Hub.
           </h1>
           <p class="text-xs sm:text-sm text-gray-400 mt-2 leading-relaxed">
-            Register once to access 10-minute dark store deliveries in urban sectors or same-day agricultural supplies at rural Gram-Panchayat centers.
+            Register once with Live GPS. Enjoy 10-minute dark store deliveries in urban areas or direct Gram-Panchayat agricultural deliveries.
           </p>
 
           <!-- 3D Canvas Box -->
           <div class="my-5 relative w-full h-56 rounded-2xl bg-[#090b10] border border-gray-800 overflow-hidden flex items-center justify-center">
             <div id="three-hero-container" class="w-full h-full"></div>
             <div class="absolute bottom-2 left-3 bg-gray-900/80 border border-gray-700/60 px-2.5 py-1 rounded-lg text-[10px] text-gray-300 font-mono backdrop-blur-sm">
-              <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block mr-1"></span> Live GPS Engine Ready
+              <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block mr-1"></span> 3D Dark Store Node Active
             </div>
           </div>
 
@@ -186,13 +268,12 @@
             <div class="p-2.5 rounded-xl bg-gray-900/60 border border-gray-800">
               <i class="fa-solid fa-wheat-awn text-emerald-400 text-sm mb-1 block"></i>
               <strong class="text-white block">Rural Village Nodes</strong>
-              <span class="text-gray-400 text-[11px]">Direct hub drop point</span>
+              <span class="text-gray-400 text-[11px]">Gram-Panchayat drops</span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Quick Trust Indicators -->
       <div class="flex items-center justify-around p-3 rounded-2xl bg-gray-900/40 border border-gray-800/80 text-[11px] text-gray-400 font-medium">
         <span class="flex items-center gap-1.5"><i class="fa-solid fa-lock text-emerald-400"></i> No Spam SMS</span>
         <span class="flex items-center gap-1.5"><i class="fa-solid fa-check text-brand-orange"></i> Instant OTP</span>
@@ -200,12 +281,8 @@
       </div>
     </div>
 
-    <!-- RIGHT SIDE: Multi-Step Registration / Login & Authenticated Dashboard -->
+    <!-- RIGHT SIDE: Multi-Step Registration / Login Container -->
     <div class="lg:col-span-7">
-
-      <!-- ============================================== -->
-      <!-- VIEW A: ONBOARDING CONTAINER (REGISTER & LOGIN) -->
-      <!-- ============================================== -->
       <div id="onboarding-flow-card" class="glass-panel p-6 sm:p-8 rounded-3xl border border-gray-800/90 shadow-2xl relative">
         
         <!-- Step Indicators -->
@@ -233,13 +310,9 @@
           </button>
         </div>
 
-        <!-- ========================================== -->
-        <!-- STEP 1: REGISTRATION & LOGIN FORM          -->
-        <!-- ========================================== -->
+        <!-- Step 1: Form -->
         <div id="step-1-container">
           <form onsubmit="handleDetailsSubmit(event)" class="space-y-4">
-
-            <!-- Full Name (Only for registration) -->
             <div id="field-name-group">
               <label class="block text-xs font-bold text-gray-300 mb-1">
                 Full Name <span class="text-brand-orange">*</span>
@@ -249,14 +322,14 @@
                 <input 
                   id="input-name" 
                   type="text" 
-                  placeholder="e.g. Ramesh Varma" 
-                  class="w-full bg-[#101217] border border-gray-700 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange transition"
+                  value="Rahul" 
+                  placeholder="e.g. Rahul Sharma" 
+                  class="w-full bg-[#101217] border border-gray-700 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-orange"
                 >
               </div>
               <p id="err-name" class="text-[10px] text-rose-400 hidden mt-1">Please enter your full name.</p>
             </div>
 
-            <!-- Mobile Number & Email in 2 columns -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label class="block text-xs font-bold text-gray-300 mb-1">
@@ -268,8 +341,9 @@
                     id="input-phone" 
                     type="tel" 
                     maxlength="10" 
+                    value="9876543210" 
                     placeholder="98765 43210" 
-                    class="w-full bg-[#101217] border border-gray-700 rounded-xl pl-14 pr-3 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange transition font-mono"
+                    class="w-full bg-[#101217] border border-gray-700 rounded-xl pl-14 pr-3 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-orange font-mono"
                   >
                 </div>
                 <p id="err-phone" class="text-[10px] text-rose-400 hidden mt-1">Enter valid 10-digit mobile number.</p>
@@ -284,15 +358,16 @@
                   <input 
                     id="input-email" 
                     type="email" 
+                    value="rahul@example.com" 
                     placeholder="name@example.com" 
-                    class="w-full bg-[#101217] border border-gray-700 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange transition"
+                    class="w-full bg-[#101217] border border-gray-700 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-orange"
                   >
                 </div>
                 <p id="err-email" class="text-[10px] text-rose-400 hidden mt-1">Enter a valid email address.</p>
               </div>
             </div>
 
-            <!-- Delivery Zone Switcher: Urban Express vs Rural Hub -->
+            <!-- Fulfillment Zone Choice -->
             <div>
               <label class="block text-xs font-bold text-gray-300 mb-1">Delivery Fulfillment Zone</label>
               <div class="grid grid-cols-2 gap-2">
@@ -314,17 +389,16 @@
               </div>
             </div>
 
-            <!-- Live Geolocation & Address Section (Blinkit Style) -->
+            <!-- Live GPS & Address -->
             <div class="pt-2 border-t border-gray-800/80 space-y-3">
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <h4 class="text-xs font-bold text-white flex items-center gap-1.5">
                     <i class="fa-solid fa-crosshairs text-brand-orange"></i> Live Delivery Address
                   </h4>
-                  <p class="text-[10px] text-gray-400">Auto-locate or drag the map pin to pinpoint your entrance</p>
+                  <p class="text-[10px] text-gray-400">Click Use Current Location to fetch exact GPS</p>
                 </div>
                 
-                <!-- Blinkit style GPS button -->
                 <button 
                   type="button" 
                   onclick="triggerLiveGPS()" 
@@ -336,7 +410,7 @@
                 </button>
               </div>
 
-              <!-- Interactive Leaflet Map Box -->
+              <!-- Leaflet Map -->
               <div class="relative w-full h-44 rounded-2xl overflow-hidden border border-gray-700 shadow-inner">
                 <div id="leaflet-map" class="w-full h-full"></div>
                 <div id="map-locating-badge" class="hidden absolute top-2 right-2 z-[1000] bg-gray-900/90 text-brand-orange text-[10px] font-bold px-2 py-1 rounded-lg border border-brand-orange/40 flex items-center gap-1 backdrop-blur-sm">
@@ -344,7 +418,6 @@
                 </div>
               </div>
 
-              <!-- Reverse-Geocoded Address Display -->
               <div>
                 <label class="block text-[11px] font-bold text-gray-400 mb-1">Detected GPS Address</label>
                 <div class="relative">
@@ -352,19 +425,18 @@
                   <textarea 
                     id="input-address-full" 
                     rows="2" 
-                    placeholder="Click 'Use Current Location' or enter your full street address..." 
-                    class="w-full bg-[#101217] border border-gray-700 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange transition"
-                  ></textarea>
+                    class="w-full bg-[#101217] border border-gray-700 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-orange"
+                  >Marthanda Nagar, Kondapur, Ward 107 Madhapur, Greater Hyderabad Municipal Corporation West Zone, Hyderabad, 500084</textarea>
                 </div>
               </div>
 
-              <!-- House No & Landmark/PIN fields -->
               <div class="grid grid-cols-2 gap-2">
                 <div>
                   <input 
                     id="input-house" 
                     type="text" 
                     placeholder="Flat / House / Suite No." 
+                    value="Flat 402, Cyber View"
                     class="w-full bg-[#101217] border border-gray-700 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-orange"
                   >
                 </div>
@@ -372,14 +444,15 @@
                   <input 
                     id="input-pincode" 
                     type="text" 
-                    placeholder="PIN Code (e.g. 500081)" 
+                    placeholder="PIN Code" 
+                    value="500084"
                     class="w-full bg-[#101217] border border-gray-700 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-orange font-mono"
                   >
                 </div>
               </div>
             </div>
 
-            <!-- OTP Channel Selection Option -->
+            <!-- OTP Channel Selection -->
             <div class="pt-2 border-t border-gray-800/80">
               <label class="block text-xs font-bold text-gray-300 mb-1.5">Deliver 6-Digit OTP via:</label>
               <div class="grid grid-cols-2 gap-2">
@@ -389,12 +462,12 @@
                 </label>
                 <label id="channel-opt-email" class="p-2.5 rounded-xl border border-gray-800 bg-[#101217] cursor-pointer flex items-center space-x-2 hover:border-gray-700 transition">
                   <input type="radio" name="otp-channel" value="email" class="text-brand-orange focus:ring-0">
-                  <span class="text-xs font-bold text-white flex items-center gap-1.5"><i class="fa-regular fa-envelope text-gray-400"></i> Secure Email</span>
+                  <span class="text-xs font-bold text-white flex items-center gap-1.5"><i class="fa-regular fa-envelope text-gray-400"></i> Email</span>
                 </label>
               </div>
             </div>
 
-            <!-- Action Button -->
+            <!-- Submit -->
             <button 
               type="submit" 
               id="btn-submit-step1" 
@@ -406,9 +479,7 @@
           </form>
         </div>
 
-        <!-- ========================================== -->
-        <!-- STEP 2: 6-DIGIT OTP VERIFICATION FLOW      -->
-        <!-- ========================================== -->
+        <!-- Step 2: OTP Entry -->
         <div id="step-2-container" class="hidden space-y-6">
           <div class="text-center space-y-1">
             <div class="w-12 h-12 rounded-2xl bg-brand-orange/20 text-brand-orange flex items-center justify-center mx-auto text-xl mb-2">
@@ -420,7 +491,7 @@
             </p>
           </div>
 
-          <!-- 6-digit box inputs with auto-advance and backspace support -->
+          <!-- 6-digit box inputs -->
           <div class="flex justify-center items-center gap-2 sm:gap-3 py-2">
             <input type="text" maxlength="1" class="otp-digit w-10 sm:w-12 h-12 sm:h-14 text-center text-lg sm:text-xl font-black font-mono bg-gray-900 border-2 border-gray-700 rounded-xl text-white focus:outline-none focus:border-brand-orange transition" autofocus>
             <input type="text" maxlength="1" class="otp-digit w-10 sm:w-12 h-12 sm:h-14 text-center text-lg sm:text-xl font-black font-mono bg-gray-900 border-2 border-gray-700 rounded-xl text-white focus:outline-none focus:border-brand-orange transition">
@@ -435,7 +506,6 @@
             <button type="button" onclick="goToStep(1)" class="text-gray-400 hover:text-white flex items-center gap-1">
               <i class="fa-solid fa-arrow-left"></i> Edit Details
             </button>
-
             <div>
               <span id="otp-timer-label" class="text-gray-400">Resend in: <strong id="otp-countdown" class="text-brand-orange font-mono">59s</strong></span>
               <button id="btn-resend-otp" onclick="resendOTP()" class="hidden text-brand-orange hover:underline font-bold">
@@ -452,145 +522,662 @@
             class="w-full py-3 rounded-xl bg-brand-orange hover:bg-brand-hover text-white font-bold text-xs sm:text-sm shadow-lg shadow-brand-orange/30 transition transform active:scale-95 flex items-center justify-center gap-2"
           >
             <i class="fa-solid fa-circle-check"></i>
-            <span>Confirm & Enter 23E NeeDs</span>
+            <span>Confirm & Enter 23E NeeDs Store</span>
           </button>
         </div>
 
       </div>
+    </div>
+  </section>
 
-      <!-- ============================================== -->
-      <!-- VIEW B: AUTHENTICATED CUSTOMER PROFILE HUB     -->
-      <!-- ============================================== -->
-      <div id="user-dashboard-view" class="hidden space-y-6">
-        
-        <!-- Welcome Banner -->
-        <div class="glass-panel p-6 rounded-3xl border border-brand-orange/30 bg-gradient-to-r from-gray-900 via-[#181c25] to-gray-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div class="flex items-center space-x-3">
-            <div class="w-14 h-14 rounded-2xl bg-brand-orange text-white flex items-center justify-center font-black text-2xl shadow-lg shadow-brand-orange/30">
-              <span id="user-avatar-initials">RV</span>
-            </div>
-            <div>
-              <div class="flex items-center gap-2">
-                <h3 id="dash-user-name" class="text-xl font-black font-display text-white">Ramesh Varma</h3>
-                <span class="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-bold">✓ Verified Customer</span>
-              </div>
-              <p id="dash-user-contact" class="text-xs text-gray-400 font-mono mt-0.5">+91 98765 43210 • ramesh@example.com</p>
-            </div>
-          </div>
-
+  <!-- ============================================== -->
+  <!-- VIEW 2: AUTHENTICATED STOREFRONT (AFTER LOGIN) -->
+  <!-- ============================================== -->
+  <section id="storefront-view" class="hidden flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full space-y-6">
+    
+    <!-- Top Store Banner & Search -->
+    <div class="glass-panel p-5 sm:p-6 rounded-3xl border border-gray-800/80 bg-gradient-to-r from-gray-900 via-[#161a24] to-gray-900 relative overflow-hidden">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
           <div class="flex items-center gap-2">
-            <button onclick="handleLogout()" class="px-3.5 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-bold transition flex items-center gap-1.5 border border-gray-700">
-              <i class="fa-solid fa-arrow-right-from-bracket text-rose-400"></i> Logout
-            </button>
+            <span class="px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Live Dark Store Connected
+            </span>
+            <span id="storefront-mode-pill" class="px-2.5 py-0.5 rounded-full bg-brand-orange/20 text-brand-orange border border-brand-orange/40 text-[10px] font-bold">
+              Urban Express • 10-15 Min
+            </span>
           </div>
+          <h2 class="text-xl sm:text-2xl font-black font-display text-white mt-1.5">
+            What do you need right now?
+          </h2>
+          <p id="store-banner-subtitle" class="text-xs text-gray-400 mt-0.5">
+            Delivering from Dark Store Node #107 to your GPS entrance
+          </p>
         </div>
 
-        <!-- Current Delivery Zone Status Card -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div class="glass-card p-4 rounded-2xl">
-            <p class="text-[11px] text-gray-400 font-medium">Active Delivery Mode</p>
-            <h4 id="dash-zone-title" class="text-sm font-bold text-white mt-1 flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-              Urban Express (10m)
-            </h4>
-            <p id="dash-zone-desc" class="text-[10px] text-gray-500 mt-1">Dark store: Hyderabad Madhapur Node</p>
-          </div>
+        <!-- Search Bar -->
+        <div class="w-full md:w-80 relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+          <input 
+            type="text" 
+            id="catalog-search-input" 
+            oninput="handleSearchFilter(this.value)"
+            placeholder="Search milk, atta, snacks, farm seeds..." 
+            class="w-full bg-[#0D0F14] border border-gray-700/80 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange shadow-inner"
+          >
+        </div>
+      </div>
+    </div>
 
-          <div class="glass-card p-4 rounded-2xl">
-            <p class="text-[11px] text-gray-400 font-medium">23E Cash / Wallet Balance</p>
-            <h4 class="text-base font-black font-display text-brand-orange mt-1">₹150.00</h4>
-            <p class="text-[10px] text-emerald-400 mt-1">₹50 Onboarding bonus credited</p>
-          </div>
+    <!-- Category Filter Tabs -->
+    <div class="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-none" id="categories-scroll">
+      <button onclick="filterCategory('all')" class="cat-pill active px-4 py-2 rounded-2xl bg-brand-orange text-white text-xs font-bold shrink-0 transition shadow-md">
+        ⚡ All Needs
+      </button>
+      <button onclick="filterCategory('dairy')" class="cat-pill px-4 py-2 rounded-2xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-gray-300 text-xs font-semibold shrink-0 transition">
+        🥛 Dairy & Breakfast
+      </button>
+      <button onclick="filterCategory('fruits')" class="cat-pill px-4 py-2 rounded-2xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-gray-300 text-xs font-semibold shrink-0 transition">
+        🥦 Fresh Veggies & Fruits
+      </button>
+      <button onclick="filterCategory('munchies')" class="cat-pill px-4 py-2 rounded-2xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-gray-300 text-xs font-semibold shrink-0 transition">
+        🍟 Instant Munchies
+      </button>
+      <button onclick="filterCategory('staples')" class="cat-pill px-4 py-2 rounded-2xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-gray-300 text-xs font-semibold shrink-0 transition">
+        🌾 Staples & Atta
+      </button>
+      <button onclick="filterCategory('agri')" class="cat-pill px-4 py-2 rounded-2xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-gray-300 text-xs font-semibold shrink-0 transition">
+        🚜 Seeds & Farm Bio
+      </button>
+      <button onclick="filterCategory('pharma')" class="cat-pill px-4 py-2 rounded-2xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-gray-300 text-xs font-semibold shrink-0 transition">
+        💊 OTC Essentials
+      </button>
+    </div>
 
-          <div class="glass-card p-4 rounded-2xl">
-            <p class="text-[11px] text-gray-400 font-medium">Default Delivery Address</p>
-            <h4 id="dash-pincode-badge" class="text-xs font-bold text-white mt-1 font-mono">PIN: 500081</h4>
-            <p id="dash-short-address" class="text-[10px] text-gray-400 truncate mt-1">Hitech City, Hyderabad</p>
+    <!-- Catalog Product Grid -->
+    <div id="product-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+      <!-- Populated via Javascript -->
+    </div>
+
+    <!-- Empty State -->
+    <div id="catalog-empty-state" class="hidden text-center py-16">
+      <div class="w-14 h-14 rounded-2xl bg-gray-900 text-gray-500 flex items-center justify-center mx-auto text-2xl mb-3">
+        <i class="fa-solid fa-box-open"></i>
+      </div>
+      <h3 class="text-sm font-bold text-white">No items found</h3>
+      <p class="text-xs text-gray-400 mt-1">Try another search keyword or switch categories.</p>
+    </div>
+
+  </section>
+
+  <!-- ============================================== -->
+  <!-- CART DRAWER (SLIDE-OVER)                       -->
+  <!-- ============================================== -->
+  <div id="cart-drawer-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden transition-opacity" onclick="toggleCartDrawer(false)"></div>
+
+  <div id="cart-drawer" class="fixed top-0 right-0 h-full w-full max-w-md bg-[#0F1218] border-l border-gray-800 z-50 flex flex-col justify-between transform translate-x-full transition-transform duration-300 shadow-2xl">
+    
+    <!-- Drawer Header -->
+    <div class="p-4 sm:p-5 border-b border-gray-800 flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <div class="w-8 h-8 rounded-xl bg-brand-orange/20 text-brand-orange flex items-center justify-center text-sm font-bold">
+          <i class="fa-solid fa-cart-shopping"></i>
+        </div>
+        <div>
+          <h3 class="text-sm font-black font-display text-white">My Cart (<span id="cart-drawer-count">0</span> items)</h3>
+          <p id="cart-sla-label" class="text-[10px] text-emerald-400 font-medium">⚡ 10-15 Min Express Delivery</p>
+        </div>
+      </div>
+      <button onclick="toggleCartDrawer(false)" class="w-8 h-8 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white flex items-center justify-center text-xs transition">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Delivery Address Banner inside Cart -->
+    <div class="px-4 py-2.5 bg-gray-900/90 border-b border-gray-800/80 flex items-start gap-2.5">
+      <i class="fa-solid fa-location-dot text-brand-orange text-xs mt-0.5"></i>
+      <div class="text-xs flex-1 truncate">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-white text-[11px]">Delivering to:</span>
+          <button onclick="openProfileModal(); toggleCartDrawer(false);" class="text-[10px] text-brand-orange hover:underline font-semibold">Change</button>
+        </div>
+        <p id="cart-address-snippet" class="text-[10px] text-gray-400 truncate mt-0.5">Detecting location...</p>
+      </div>
+    </div>
+
+    <!-- Cart Items Scroll Area -->
+    <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-3">
+      <!-- Items dynamically populated -->
+    </div>
+
+    <!-- Cart Footer & Bill Breakdown -->
+    <div class="p-4 sm:p-5 border-t border-gray-800 bg-[#0B0D12] space-y-3">
+      
+      <!-- Coupon Code Box -->
+      <div class="flex gap-2">
+        <input 
+          type="text" 
+          id="coupon-code-input" 
+          placeholder="Enter coupon (e.g. WELCOME23E)" 
+          class="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white uppercase font-mono placeholder-gray-500 focus:outline-none focus:border-brand-orange"
+        >
+        <button onclick="applyCoupon()" class="px-3.5 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-brand-orange font-bold text-xs border border-brand-orange/30 transition">
+          Apply
+        </button>
+      </div>
+      <p id="coupon-feedback" class="text-[10px] text-emerald-400 hidden"></p>
+
+      <!-- Bill Breakdown -->
+      <div class="p-3 rounded-2xl bg-gray-900/70 border border-gray-800 text-[11px] space-y-1.5">
+        <div class="flex justify-between text-gray-400">
+          <span>Item Total</span>
+          <span class="font-mono text-white">₹<span id="bill-item-total">0</span></span>
+        </div>
+        <div class="flex justify-between text-gray-400">
+          <span>Delivery Partner Fee</span>
+          <span class="font-mono text-white"><s class="text-gray-500 text-[10px] mr-1">₹35</s> <span class="text-emerald-400 font-bold">FREE</span></span>
+        </div>
+        <div class="flex justify-between text-gray-400">
+          <span>Handling & Packaging Fee</span>
+          <span class="font-mono text-white">₹4</span>
+        </div>
+        <div id="bill-discount-row" class="hidden flex justify-between text-emerald-400 font-semibold">
+          <span>Coupon Discount</span>
+          <span class="font-mono">-₹<span id="bill-discount-amt">50</span></span>
+        </div>
+        <div class="border-t border-gray-800 pt-1.5 flex justify-between text-xs font-black text-white">
+          <span>To Pay</span>
+          <span class="font-mono text-brand-orange text-sm">₹<span id="bill-grand-total">0</span></span>
+        </div>
+      </div>
+
+      <!-- Proceed to Payout / Payment Button -->
+      <button 
+        id="btn-proceed-checkout" 
+        onclick="openPaymentModal()" 
+        disabled
+        class="w-full py-3.5 rounded-xl bg-brand-orange hover:bg-brand-hover disabled:opacity-50 disabled:pointer-events-none text-white font-bold text-xs sm:text-sm shadow-xl shadow-brand-orange/30 transition transform active:scale-95 flex items-center justify-between px-4"
+      >
+        <div class="text-left leading-tight">
+          <span class="text-[10px] opacity-80 uppercase block">Grand Total</span>
+          <span class="font-mono font-black text-sm">₹<span id="btn-pay-amount">0</span></span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span>Proceed to Pay</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </div>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- VIEW 3: CHECKOUT & PAYOUT MODAL                -->
+  <!-- ============================================== -->
+  <div id="payment-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+    <div class="glass-panel w-full max-w-lg rounded-3xl border border-gray-800 p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-gray-800">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-black font-display text-white">Select Payout Option</h3>
+            <p class="text-[10px] text-gray-400">100% Encrypted & Instant Settlement</p>
           </div>
         </div>
+        <button onclick="closePaymentModal()" class="w-8 h-8 rounded-xl bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center text-xs">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
 
-        <!-- Saved Addresses Directory -->
-        <div class="glass-card p-6 rounded-3xl border border-gray-800 space-y-4">
+      <!-- Total Amount Banner -->
+      <div class="my-4 p-3.5 rounded-2xl bg-gradient-to-r from-gray-900 to-[#141a24] border border-gray-800 flex items-center justify-between">
+        <div>
+          <span class="text-[10px] text-gray-400 uppercase font-semibold">Total Payable</span>
+          <h4 class="text-xl font-black font-display text-brand-orange font-mono">₹<span id="modal-pay-total">0</span></h4>
+        </div>
+        <div class="text-right">
+          <span class="text-[10px] text-gray-400 block">Deliver to</span>
+          <span id="modal-delivery-pin" class="text-xs font-bold text-white font-mono">PIN: 500084</span>
+        </div>
+      </div>
+
+      <!-- Payment Rails -->
+      <div class="space-y-2.5">
+        
+        <!-- Rail 1: UPI Options (GPay, PhonePe, Paytm, Custom) -->
+        <div class="p-3.5 rounded-2xl bg-gray-900/80 border border-gray-800 space-y-2.5">
           <div class="flex items-center justify-between">
-            <div>
-              <h4 class="text-sm font-bold text-white">Your Saved Delivery Addresses</h4>
-              <p class="text-xs text-gray-400">Manage delivery locations for city flat and village residence</p>
-            </div>
-            <button onclick="promptAddNewAddress()" class="px-3 py-1.5 rounded-xl bg-brand-orange/20 text-brand-orange hover:bg-brand-orange hover:text-white text-xs font-bold transition flex items-center gap-1">
-              <i class="fa-solid fa-plus text-[10px]"></i> Add Address
+            <span class="text-xs font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-mobile-screen-button text-brand-orange"></i> UPI Instant Pay
+            </span>
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-400 font-bold">Fastest</span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="selectPaymentMethod('upi_gpay')" id="pay-opt-gpay" class="p-2 rounded-xl bg-gray-800/80 border border-brand-orange text-center hover:border-brand-orange text-xs text-white font-bold transition">
+              <i class="fa-brands fa-google text-emerald-400 block text-base mb-1"></i> GPay
+            </button>
+            <button onclick="selectPaymentMethod('upi_phonepe')" id="pay-opt-phonepe" class="p-2 rounded-xl bg-gray-800/80 border border-gray-700 text-center hover:border-brand-orange text-xs text-white font-bold transition">
+              <i class="fa-solid fa-money-bill-transfer text-purple-400 block text-base mb-1"></i> PhonePe
+            </button>
+            <button onclick="selectPaymentMethod('upi_paytm')" id="pay-opt-paytm" class="p-2 rounded-xl bg-gray-800/80 border border-gray-700 text-center hover:border-brand-orange text-xs text-white font-bold transition">
+              <i class="fa-solid fa-wallet text-sky-400 block text-base mb-1"></i> Paytm
             </button>
           </div>
 
-          <div id="saved-addresses-list" class="space-y-2.5">
-            <!-- Dynamically populated -->
+          <div class="pt-1">
+            <input 
+              type="text" 
+              id="custom-vpa-input" 
+              placeholder="Or enter UPI ID (e.g. mobile@upi)" 
+              class="w-full bg-[#0a0c10] border border-gray-700 rounded-xl px-3 py-2 text-xs text-white font-mono placeholder-gray-500 focus:outline-none focus:border-brand-orange"
+            >
           </div>
         </div>
 
+        <!-- Rail 2: 23E NeeDs Wallet Balance -->
+        <label onclick="selectPaymentMethod('wallet')" class="p-3.5 rounded-2xl bg-gray-900/80 border border-gray-800 flex items-center justify-between cursor-pointer hover:border-brand-orange/50 transition">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 rounded-xl bg-brand-orange/20 text-brand-orange flex items-center justify-center text-sm">
+              <i class="fa-solid fa-coins"></i>
+            </div>
+            <div>
+              <span class="text-xs font-bold text-white block">23E NeeDs Wallet Balance</span>
+              <span class="text-[10px] text-gray-400 font-mono">Available: ₹<span id="modal-wallet-balance">150</span></span>
+            </div>
+          </div>
+          <input type="radio" name="pay-method" id="pay-radio-wallet" class="text-brand-orange focus:ring-0">
+        </label>
+
+        <!-- Rail 3: Credit / Debit Cards -->
+        <label onclick="selectPaymentMethod('card')" class="p-3.5 rounded-2xl bg-gray-900/80 border border-gray-800 flex items-center justify-between cursor-pointer hover:border-brand-orange/50 transition">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-sm">
+              <i class="fa-regular fa-credit-card"></i>
+            </div>
+            <div>
+              <span class="text-xs font-bold text-white block">Credit / Debit Card</span>
+              <span class="text-[10px] text-gray-400">Visa, Mastercard, RuPay</span>
+            </div>
+          </div>
+          <input type="radio" name="pay-method" id="pay-radio-card" class="text-brand-orange focus:ring-0">
+        </label>
+
+        <!-- Rail 4: Cash on Delivery (COD) -->
+        <label onclick="selectPaymentMethod('cod')" class="p-3.5 rounded-2xl bg-gray-900/80 border border-gray-800 flex items-center justify-between cursor-pointer hover:border-brand-orange/50 transition">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-hand-holding-dollar"></i>
+            </div>
+            <div>
+              <span class="text-xs font-bold text-white block">Cash on Delivery (COD)</span>
+              <span class="text-[10px] text-gray-400">Pay cash/QR at doorstep upon delivery</span>
+            </div>
+          </div>
+          <input type="radio" name="pay-method" id="pay-radio-cod" class="text-brand-orange focus:ring-0">
+        </label>
+
       </div>
+
+      <!-- Confirm & Place Order CTA -->
+      <button 
+        type="button" 
+        onclick="confirmAndExecutePayment()" 
+        id="btn-confirm-payment" 
+        class="w-full mt-5 py-3.5 rounded-xl bg-brand-orange hover:bg-brand-hover text-white font-bold text-xs sm:text-sm shadow-xl shadow-brand-orange/30 transition transform active:scale-95 flex items-center justify-center gap-2"
+      >
+        <i class="fa-solid fa-lock"></i>
+        <span>Pay & Dispatch Order</span>
+      </button>
 
     </div>
+  </div>
 
-  </main>
+  <!-- ============================================== -->
+  <!-- VIEW 4: LIVE ORDER TRACKING & FULFILLMENT MODAL-->
+  <!-- ============================================== -->
+  <div id="order-tracking-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div class="glass-panel w-full max-w-lg rounded-3xl border border-brand-orange/40 p-6 shadow-2xl space-y-4">
+      
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+          <h3 class="text-base font-black font-display text-white">Live Delivery Tracker</h3>
+        </div>
+        <button onclick="closeTrackingModal()" class="w-7 h-7 rounded-lg bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center text-xs">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
 
-  <!-- Footer -->
-  <footer class="border-t border-gray-800/80 bg-[#0a0b0e] py-4 text-center text-xs text-gray-500">
-    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-      <div class="flex items-center gap-2">
-        <span class="text-white font-bold">23E NeeDs</span>
-        <span>•</span>
-        <span>Urban 10-Minute Dark Store & Rural Panchayat Hub Commerce</span>
+      <!-- ETA Display Card -->
+      <div class="p-4 rounded-2xl bg-gradient-to-r from-orange-950/40 via-gray-900 to-gray-900 border border-brand-orange/30 flex items-center justify-between">
+        <div>
+          <span class="text-[10px] text-brand-orange font-bold uppercase tracking-wider block">Estimated Delivery</span>
+          <h2 id="tracker-countdown" class="text-2xl font-black font-mono text-white mt-0.5">09:48 mins</h2>
+          <p id="tracker-status-text" class="text-[11px] text-gray-300">Rider picked up from Dark Store #107</p>
+        </div>
+        <div class="w-12 h-12 rounded-2xl bg-brand-orange/20 text-brand-orange flex items-center justify-center text-2xl">
+          <i id="tracker-icon" class="fa-solid fa-motorcycle animate-bounce"></i>
+        </div>
       </div>
-      <div>
-        <span>Hyperlocal GPS Engine • Instant OTP Auth</span>
+
+      <!-- Delivery Route Steps Tracker -->
+      <div class="p-4 rounded-2xl bg-gray-900 border border-gray-800 space-y-3">
+        <div class="flex items-center space-x-3 text-xs">
+          <div class="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-[10px]">
+            <i class="fa-solid fa-check"></i>
+          </div>
+          <div class="flex-1">
+            <strong class="text-white block">Order Placed & Confirmed</strong>
+            <span class="text-[10px] text-gray-400">Payment verified via UPI/Gateway</span>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-3 text-xs">
+          <div id="step-pack-icon" class="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-[10px]">
+            <i class="fa-solid fa-check"></i>
+          </div>
+          <div class="flex-1">
+            <strong class="text-white block">Packed at Dark Store</strong>
+            <span class="text-[10px] text-gray-400">Item barcodes scanned by 23E picker</span>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-3 text-xs">
+          <div id="step-ride-icon" class="w-6 h-6 rounded-full bg-brand-orange text-white flex items-center justify-center font-bold text-[10px]">
+            <i class="fa-solid fa-location-arrow"></i>
+          </div>
+          <div class="flex-1">
+            <strong id="step-ride-title" class="text-brand-orange font-bold block">Out for Hyperlocal Delivery</strong>
+            <span id="step-ride-sub" class="text-[10px] text-gray-400">Rider Suresh (EV-04) is 1.2 km away</span>
+          </div>
+        </div>
       </div>
+
+      <!-- Destination Summary Box -->
+      <div class="p-3 rounded-xl bg-gray-900/60 border border-gray-800/80 text-[11px] text-gray-400 flex items-start gap-2">
+        <i class="fa-solid fa-house-chimney text-brand-orange mt-0.5"></i>
+        <div class="truncate">
+          <span class="text-white font-bold block truncate">Destination Entrance</span>
+          <span id="tracker-dest-address" class="truncate block text-[10px]">Marthanda Nagar, Kondapur, Hyderabad</span>
+        </div>
+      </div>
+
+      <button onclick="closeTrackingModal()" class="w-full py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-white font-bold text-xs transition">
+        Continue Shopping
+      </button>
+
     </div>
-  </footer>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- SAVED ADDRESSES & PROFILE MODAL                -->
+  <!-- ============================================== -->
+  <div id="profile-addresses-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+    <div class="glass-panel w-full max-w-md rounded-3xl border border-gray-800 p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-2 border-b border-gray-800">
+        <h3 class="text-sm font-bold text-white">Your Delivery Destinations</h3>
+        <button onclick="closeProfileModal()" class="w-7 h-7 rounded-lg bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center text-xs">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div id="modal-address-list" class="space-y-2 max-h-60 overflow-y-auto">
+        <!-- Rendered via JS -->
+      </div>
+
+      <button onclick="promptAddNewAddress()" class="w-full py-2.5 rounded-xl bg-brand-orange/20 text-brand-orange hover:bg-brand-orange hover:text-white font-bold text-xs transition flex items-center justify-center gap-1.5">
+        <i class="fa-solid fa-plus text-[10px]"></i> Add New Location
+      </button>
+    </div>
+  </div>
+
+  <!-- Floating Mobile Cart Bottom Bar -->
+  <div id="mobile-floating-cart" class="sm:hidden fixed bottom-3 left-3 right-3 z-40 hidden animate-slide-up">
+    <button onclick="toggleCartDrawer(true)" class="w-full p-3 rounded-2xl bg-gradient-to-r from-brand-orange to-orange-600 text-white shadow-2xl flex items-center justify-between border border-white/20">
+      <div class="flex items-center space-x-2">
+        <div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center font-bold text-xs">
+          <span id="mob-cart-count">0</span>
+        </div>
+        <div class="text-left leading-tight">
+          <span class="text-[10px] uppercase font-semibold text-white/80 block">View Cart</span>
+          <span class="text-xs font-mono font-black">₹<span id="mob-cart-total">0</span></span>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5 text-xs font-bold">
+        <span>Proceed</span>
+        <i class="fa-solid fa-chevron-right text-[10px]"></i>
+      </div>
+    </button>
+  </div>
 
   <!-- Toast Notification Box -->
   <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 pointer-events-none transition-all duration-300 flex items-center space-x-3 px-4 py-3 rounded-2xl bg-gray-900 text-white text-xs border border-brand-orange shadow-2xl">
     <div id="toast-icon" class="text-brand-orange text-base">
       <i class="fa-solid fa-circle-check"></i>
     </div>
-    <span id="toast-message" class="font-semibold">Operation completed</span>
+    <span id="toast-message" class="font-semibold">Action completed</span>
   </div>
 
   <script>
-    /* Application State */
-    const appData = {
-      authMode: 'register', // 'register' or 'login'
+    /* ===================================================
+       1. COMPLETE APPLICATION STATE & CATALOG DATABASE
+       =================================================== */
+    const appState = {
+      isAuthenticated: false,
+      authMode: 'register',
       currentStep: 1,
       currentUser: null,
       generatedOTP: '123456',
       otpChannel: 'phone',
       timerCountdown: 60,
       timerInterval: null,
+      currentZone: 'urban', // 'urban' or 'rural'
+      activeCategory: 'all',
+      searchKeyword: '',
+      appliedDiscount: 0,
+      selectedPaymentMethod: 'upi_gpay',
+      walletBalance: 150.00,
+      
       location: {
-        lat: 17.4483, // Default Hyderabad Coordinates
-        lng: 78.3742,
-        address: 'Madhapur, Hitech City, Hyderabad, Telangana',
-        house: '',
-        pincode: '500081',
+        lat: 17.4568,
+        lng: 78.3685,
+        address: 'Marthanda Nagar, Kondapur, Ward 107 Madhapur, Greater Hyderabad, Telangana - 500084',
+        house: 'Flat 402, Cyber View',
+        pincode: '500084',
         zone: 'urban'
       },
+
       savedAddresses: [
         {
           id: 1,
           tag: 'Home (Urban)',
-          address: 'Flat 402, Cyber Heights, Madhapur, Hyderabad, 500081',
+          address: 'Flat 402, Cyber View, Marthanda Nagar, Kondapur, Hyderabad - 500084',
           zone: 'urban',
           isDefault: true
         },
         {
           id: 2,
           tag: 'Rural Farm Hub',
-          address: 'Panchayat Road, Kothur Village Center, Rangareddy, 509228',
+          address: 'Panchayat Road, Kothur Village Depot, Rangareddy - 509228',
           zone: 'rural',
           isDefault: false
         }
-      ]
+      ],
+
+      cart: {} // { productId: quantity }
     };
 
-    /* 3D Floating Parcel Badge (Three.js) */
+    // Full Multi-Category Catalog (Urban Express & Rural Farm Network)
+    const catalogData = [
+      // Dairy & Breakfast
+      {
+        id: 101,
+        title: 'Heritage Fresh Milk (Toned)',
+        weight: '500 ml',
+        price: 29,
+        origPrice: 32,
+        category: 'dairy',
+        zone: 'all',
+        tag: '10 Mins',
+        image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=400&q=80'
+      },
+      {
+        id: 102,
+        title: 'Amul Butter (Pasteurized)',
+        weight: '100 g',
+        price: 58,
+        origPrice: 60,
+        category: 'dairy',
+        zone: 'all',
+        tag: 'Bestseller',
+        image: 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?auto=format&fit=crop&w=400&q=80'
+      },
+      {
+        id: 103,
+        title: 'Farm Fresh Brown Eggs (Pack of 6)',
+        weight: '6 units',
+        price: 54,
+        origPrice: 65,
+        category: 'dairy',
+        zone: 'urban',
+        tag: '10 Mins',
+        image: 'https://images.unsplash.com/photo-1506976785307-8732e854ad03?auto=format&fit=crop&w=400&q=80'
+      },
+      // Fresh Veggies & Fruits
+      {
+        id: 201,
+        title: 'Fresh Red Tomatoes (Direct Farm)',
+        weight: '1 kg',
+        price: 34,
+        origPrice: 48,
+        category: 'fruits',
+        zone: 'all',
+        tag: 'Farm Direct',
+        image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80'
+      },
+      {
+        id: 202,
+        title: 'Green Shimla Capsicum',
+        weight: '500 g',
+        price: 42,
+        origPrice: 55,
+        category: 'fruits',
+        zone: 'all',
+        tag: 'Crisp',
+        image: 'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?auto=format&fit=crop&w=400&q=80'
+      },
+      {
+        id: 203,
+        title: 'Nagpur Sweet Oranges',
+        weight: '1 kg',
+        price: 79,
+        origPrice: 99,
+        category: 'fruits',
+        zone: 'urban',
+        tag: 'Fresh',
+        image: 'https://images.unsplash.com/photo-1547514701-42782101795e?auto=format&fit=crop&w=400&q=80'
+      },
+      // Instant Munchies
+      {
+        id: 301,
+        title: 'Lay’s Magic Masala Chips',
+        weight: '90 g',
+        price: 20,
+        origPrice: 20,
+        category: 'munchies',
+        zone: 'urban',
+        tag: 'Instant Craving',
+        image: 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?auto=format&fit=crop&w=400&q=80'
+      },
+      {
+        id: 302,
+        title: 'Maggi 2-Minute Masala Noodles',
+        weight: 'Pack of 4',
+        price: 56,
+        origPrice: 60,
+        category: 'munchies',
+        zone: 'all',
+        tag: '10 Mins',
+        image: 'https://images.unsplash.com/photo-1612927601601-6638404737ce?auto=format&fit=crop&w=400&q=80'
+      },
+      // Staples & Atta
+      {
+        id: 401,
+        title: 'Aashirvaad Shudh Chakki Atta',
+        weight: '5 kg',
+        price: 245,
+        origPrice: 275,
+        category: 'staples',
+        zone: 'all',
+        tag: 'Essential',
+        image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80'
+      },
+      {
+        id: 402,
+        title: 'Fortune Sunlite Sunflower Oil',
+        weight: '1 L',
+        price: 135,
+        origPrice: 155,
+        category: 'staples',
+        zone: 'all',
+        tag: 'Daily Cooking',
+        image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=400&q=80'
+      },
+      // Rural Farm Seeds & Bio Fertilizers (Specific to Rural Hubs)
+      {
+        id: 501,
+        title: 'Hybrid Cotton Seed (Kaveri Bio)',
+        weight: '450 g Pack',
+        price: 860,
+        origPrice: 940,
+        category: 'agri',
+        zone: 'rural',
+        tag: 'Gram-Panchayat',
+        image: 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?auto=format&fit=crop&w=400&q=80'
+      },
+      {
+        id: 502,
+        title: 'Organic Neem Oil Bio-Pesticide',
+        weight: '1 Litre Can',
+        price: 320,
+        origPrice: 380,
+        category: 'agri',
+        zone: 'rural',
+        tag: 'Govt Certified',
+        image: 'https://images.unsplash.com/photo-1628352081506-83c43123ed6d?auto=format&fit=crop&w=400&q=80'
+      },
+      // OTC Essentials / Pharmacy
+      {
+        id: 601,
+        title: 'Crocin Pain Relief Tablet',
+        weight: 'Strip of 10',
+        price: 32,
+        origPrice: 35,
+        category: 'pharma',
+        zone: 'all',
+        tag: 'Express OTC',
+        image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=400&q=80'
+      },
+      {
+        id: 602,
+        title: 'Dettol Antiseptic Liquid',
+        weight: '250 ml',
+        price: 120,
+        origPrice: 130,
+        category: 'pharma',
+        zone: 'all',
+        tag: 'Hygiene',
+        image: 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?auto=format&fit=crop&w=400&q=80'
+      }
+    ];
+
+    /* ===================================================
+       2. THREE.JS 3D HERO VISUAL
+       =================================================== */
     let heroScene, heroCamera, heroRenderer, heroParcelGroup;
     function init3DHero() {
       const container = document.getElementById('three-hero-container');
@@ -612,7 +1199,6 @@
       heroParcelGroup = new THREE.Group();
       heroScene.add(heroParcelGroup);
 
-      // Package Box
       const boxGeo = new THREE.BoxGeometry(1.4, 1.4, 1.4);
       const boxMat = new THREE.MeshStandardMaterial({
         color: 0x1b1e26,
@@ -622,7 +1208,6 @@
       const boxMesh = new THREE.Mesh(boxGeo, boxMat);
       heroParcelGroup.add(boxMesh);
 
-      // Orange 23E NeeDs Band
       const bandGeo = new THREE.BoxGeometry(1.42, 0.24, 1.42);
       const bandMat = new THREE.MeshStandardMaterial({
         color: 0xFF5A00,
@@ -632,7 +1217,6 @@
       const bandMesh = new THREE.Mesh(bandGeo, bandMat);
       heroParcelGroup.add(bandMesh);
 
-      // Floating Location Pin Top (Cone + Sphere)
       const pinTopGeo = new THREE.SphereGeometry(0.22, 16, 16);
       const pinMat = new THREE.MeshStandardMaterial({ color: 0xFF5A00, emissive: 0x441100 });
       const pinTop = new THREE.Mesh(pinTopGeo, pinMat);
@@ -645,7 +1229,6 @@
       pinCone.rotation.x = Math.PI;
       heroParcelGroup.add(pinCone);
 
-      // Lighting
       const ambLight = new THREE.AmbientLight(0xffffff, 0.9);
       heroScene.add(ambLight);
 
@@ -677,7 +1260,9 @@
       });
     }
 
-    /* Leaflet Map & Geolocation Engine */
+    /* ===================================================
+       3. LEAFLET MAP & REVERSE GEOCODING
+       =================================================== */
     let mapInstance = null;
     let mapMarker = null;
 
@@ -688,14 +1273,12 @@
       mapInstance = L.map('leaflet-map', {
         zoomControl: false,
         attributionControl: false
-      }).setView([appData.location.lat, appData.location.lng], 15);
+      }).setView([appState.location.lat, appState.location.lng], 15);
 
-      // OpenStreetMap Tile Layer
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19
       }).addTo(mapInstance);
 
-      // Custom 23E Branded Pin Marker Icon
       const customPin = L.divIcon({
         className: 'custom-pin-marker',
         html: `
@@ -709,31 +1292,28 @@
         iconAnchor: [17, 34]
       });
 
-      mapMarker = L.marker([appData.location.lat, appData.location.lng], {
+      mapMarker = L.marker([appState.location.lat, appState.location.lng], {
         draggable: true,
         icon: customPin
       }).addTo(mapInstance);
 
       mapMarker.bindPopup("<b>Deliver Here</b><br>Pinpoint your exact house gate").openPopup();
 
-      // Drag event to fine-tune exact entry location
-      mapMarker.on('dragend', function (event) {
-        const position = mapMarker.getLatLng();
-        appData.location.lat = position.lat;
-        appData.location.lng = position.lng;
-        reverseGeocode(position.lat, position.lng);
+      mapMarker.on('dragend', function () {
+        const pos = mapMarker.getLatLng();
+        appState.location.lat = pos.lat;
+        appState.location.lng = pos.lng;
+        reverseGeocode(pos.lat, pos.lng);
       });
 
-      // Map click moves marker
       mapInstance.on('click', function(e) {
         mapMarker.setLatLng(e.latlng);
-        appData.location.lat = e.latlng.lat;
-        appData.location.lng = e.latlng.lng;
+        appState.location.lat = e.latlng.lat;
+        appState.location.lng = e.latlng.lng;
         reverseGeocode(e.latlng.lat, e.latlng.lng);
       });
     }
 
-    /* Reverse Geocoding with OpenStreetMap Nominatim */
     async function reverseGeocode(lat, lng) {
       const badge = document.getElementById('map-locating-badge');
       if (badge) badge.classList.remove('hidden');
@@ -743,12 +1323,12 @@
         const data = await response.json();
         
         if (data && data.display_name) {
-          appData.location.address = data.display_name;
+          appState.location.address = data.display_name;
           const addressBox = document.getElementById('input-address-full');
           if (addressBox) addressBox.value = data.display_name;
 
           if (data.address && data.address.postcode) {
-            appData.location.pincode = data.address.postcode;
+            appState.location.pincode = data.address.postcode;
             const pinBox = document.getElementById('input-pincode');
             if (pinBox) pinBox.value = data.address.postcode;
           }
@@ -761,7 +1341,6 @@
       }
     }
 
-    /* Blinkit-Style Live Current Location Trigger */
     function triggerLiveGPS() {
       const btn = document.getElementById('btn-gps-trigger');
       const badge = document.getElementById('map-locating-badge');
@@ -780,8 +1359,8 @@
         (pos) => {
           const lat = pos.coords.latitude;
           const lng = pos.coords.longitude;
-          appData.location.lat = lat;
-          appData.location.lng = lng;
+          appState.location.lat = lat;
+          appState.location.lng = lng;
 
           if (mapInstance && mapMarker) {
             mapInstance.setView([lat, lng], 17);
@@ -796,8 +1375,8 @@
             btn.innerHTML = `<i class="fa-solid fa-location-crosshairs"></i><span>Use Current Location</span>`;
           }, 2500);
         },
-        (error) => {
-          showToast('Unable to retrieve GPS. Please check location permissions.');
+        () => {
+          showToast('Unable to retrieve GPS. Using selected pinpoint.');
           btn.classList.remove('opacity-75', 'pointer-events-none');
           btn.innerHTML = `<i class="fa-solid fa-location-crosshairs"></i><span>Use Current Location</span>`;
           if (badge) badge.classList.add('hidden');
@@ -806,9 +1385,11 @@
       );
     }
 
-    /* Auth Mode Toggle */
+    /* ===================================================
+       4. AUTHENTICATION & MULTI-STEP OTP FLOW
+       =================================================== */
     function setAuthMode(mode) {
-      appData.authMode = mode;
+      appState.authMode = mode;
       const tabReg = document.getElementById('tab-register');
       const tabLog = document.getElementById('tab-login');
       const fieldName = document.getElementById('field-name-group');
@@ -828,22 +1409,20 @@
     }
 
     function handleZoneChange(zone) {
-      appData.location.zone = zone;
+      appState.currentZone = zone;
+      appState.location.zone = zone;
       const optUrban = document.getElementById('zone-opt-urban');
       const optRural = document.getElementById('zone-opt-rural');
 
       if (zone === 'urban') {
         optUrban.className = "p-2.5 rounded-xl border border-brand-orange bg-brand-orange/10 cursor-pointer flex items-center space-x-2 transition";
         optRural.className = "p-2.5 rounded-xl border border-gray-800 bg-[#101217] cursor-pointer flex items-center space-x-2 hover:border-gray-700 transition";
-        showToast('Zone: Urban 10-Min Dark Store Mode');
       } else {
         optRural.className = "p-2.5 rounded-xl border border-brand-orange bg-brand-orange/10 cursor-pointer flex items-center space-x-2 transition";
         optUrban.className = "p-2.5 rounded-xl border border-gray-800 bg-[#101217] cursor-pointer flex items-center space-x-2 hover:border-gray-700 transition";
-        showToast('Zone: Rural Village Gram-Panchayat Hub');
       }
     }
 
-    /* Submit Step 1 Details */
     function handleDetailsSubmit(e) {
       e.preventDefault();
 
@@ -854,23 +1433,19 @@
       const pinVal = document.getElementById('input-pincode').value.trim();
       const addrVal = document.getElementById('input-address-full').value.trim();
 
-      // Reset errors
       document.getElementById('err-name').classList.add('hidden');
       document.getElementById('err-phone').classList.add('hidden');
       document.getElementById('err-email').classList.add('hidden');
 
       let hasError = false;
-
-      if (appData.authMode === 'register' && nameVal.length < 2) {
+      if (appState.authMode === 'register' && nameVal.length < 2) {
         document.getElementById('err-name').classList.remove('hidden');
         hasError = true;
       }
-
       if (!/^\d{10}$/.test(phoneVal)) {
         document.getElementById('err-phone').classList.remove('hidden');
         hasError = true;
       }
-
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
         document.getElementById('err-email').classList.remove('hidden');
         hasError = true;
@@ -878,25 +1453,21 @@
 
       if (hasError) return;
 
-      // Detect OTP channel
       const selectedChannel = document.querySelector('input[name="otp-channel"]:checked').value;
-      appData.otpChannel = selectedChannel;
+      appState.otpChannel = selectedChannel;
 
-      // Save user payload
-      appData.currentUser = {
-        name: appData.authMode === 'register' ? nameVal : 'Registered User',
+      appState.currentUser = {
+        name: appState.authMode === 'register' ? nameVal : 'Customer Rahul',
         phone: phoneVal,
         email: emailVal,
-        address: addrVal || 'Madhapur, Hitech City, Hyderabad',
+        address: addrVal || 'Kondapur, Madhapur, Hyderabad',
         house: houseVal,
-        pincode: pinVal || '500081',
-        zone: appData.location.zone
+        pincode: pinVal || '500084',
+        zone: appState.currentZone
       };
 
-      // Generate Random 6-Digit OTP
-      appData.generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+      appState.generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
 
-      // Update OTP Recipient Description text
       const desc = document.getElementById('otp-recipient-desc');
       if (selectedChannel === 'phone') {
         desc.innerHTML = `We sent a 6-digit OTP via SMS to <span class="font-bold text-white font-mono">+91 ${phoneVal}</span>`;
@@ -904,10 +1475,7 @@
         desc.innerHTML = `We sent a 6-digit OTP via Email to <span class="font-bold text-white font-mono">${emailVal}</span>`;
       }
 
-      // Display Simulated OTP Banner
       triggerMockOTPNotification();
-
-      // Proceed to Step 2
       goToStep(2);
       startOTPTimer();
     }
@@ -919,23 +1487,21 @@
       const title = document.getElementById('otp-channel-title');
 
       if (!banner) return;
+      otpDisplay.innerText = appState.generatedOTP;
 
-      otpDisplay.innerText = appData.generatedOTP;
-
-      if (appData.otpChannel === 'phone') {
+      if (appState.otpChannel === 'phone') {
         icon.className = "fa-solid fa-comment-sms";
         title.innerText = "23E NeeDs SMS Gateway";
       } else {
         icon.className = "fa-regular fa-envelope";
         title.innerText = "23E NeeDs Email Auth";
       }
-
       banner.classList.remove('hidden');
     }
 
     function autoFillMockOTP() {
       const inputs = document.querySelectorAll('.otp-digit');
-      const code = appData.generatedOTP;
+      const code = appState.generatedOTP;
       inputs.forEach((input, index) => {
         input.value = code[index] || '';
       });
@@ -943,13 +1509,11 @@
       document.getElementById('simulated-otp-banner').classList.add('hidden');
     }
 
-    /* Multi-step navigation */
     function goToStep(step) {
-      appData.currentStep = step;
+      appState.currentStep = step;
       const step1 = document.getElementById('step-1-container');
       const step2 = document.getElementById('step-2-container');
       const authSwitcher = document.getElementById('auth-mode-switch');
-      const badge1 = document.getElementById('step-badge-1');
       const badge2 = document.getElementById('step-badge-2');
       const conn = document.getElementById('step-connector');
 
@@ -959,54 +1523,22 @@
         authSwitcher.classList.remove('hidden');
         badge2.className = "w-7 h-7 rounded-full bg-gray-800 text-gray-400 flex items-center justify-center font-bold text-xs";
         conn.style.width = "0%";
-      } else if (step === 2) {
+      } else {
         step1.classList.add('hidden');
         step2.classList.remove('hidden');
         authSwitcher.classList.add('hidden');
         badge2.className = "w-7 h-7 rounded-full bg-brand-orange text-white flex items-center justify-center font-bold text-xs";
         conn.style.width = "100%";
 
-        // Clear previous input
         const inputs = document.querySelectorAll('.otp-digit');
         inputs.forEach(i => i.value = '');
         inputs[0].focus();
       }
     }
 
-    /* OTP Inputs Auto-advance */
-    document.addEventListener('DOMContentLoaded', () => {
-      const inputs = document.querySelectorAll('.otp-digit');
-      inputs.forEach((input, index) => {
-        input.addEventListener('input', (e) => {
-          if (input.value.length === 1 && index < inputs.length - 1) {
-            inputs[index + 1].focus();
-          }
-        });
-
-        input.addEventListener('keydown', (e) => {
-          if (e.key === 'Backspace' && input.value === '' && index > 0) {
-            inputs[index - 1].focus();
-          }
-        });
-
-        // Paste support for 6-digit code
-        input.addEventListener('paste', (e) => {
-          e.preventDefault();
-          const pasteData = (e.clipboardData || window.clipboardData).getData('text').trim();
-          if (/^\d{6}$/.test(pasteData)) {
-            pasteData.split('').forEach((char, i) => {
-              if (inputs[i]) inputs[i].value = char;
-            });
-            inputs[5].focus();
-          }
-        });
-      });
-    });
-
-    /* OTP Countdown Timer */
     function startOTPTimer() {
-      clearInterval(appData.timerInterval);
-      appData.timerCountdown = 60;
+      clearInterval(appState.timerInterval);
+      appState.timerCountdown = 60;
       const countEl = document.getElementById('otp-countdown');
       const timerLabel = document.getElementById('otp-timer-label');
       const resendBtn = document.getElementById('btn-resend-otp');
@@ -1014,12 +1546,12 @@
       timerLabel.classList.remove('hidden');
       resendBtn.classList.add('hidden');
 
-      appData.timerInterval = setInterval(() => {
-        appData.timerCountdown--;
-        if (countEl) countEl.innerText = `${appData.timerCountdown}s`;
+      appState.timerInterval = setInterval(() => {
+        appState.timerCountdown--;
+        if (countEl) countEl.innerText = `${appState.timerCountdown}s`;
 
-        if (appData.timerCountdown <= 0) {
-          clearInterval(appData.timerInterval);
+        if (appState.timerCountdown <= 0) {
+          clearInterval(appState.timerInterval);
           timerLabel.classList.add('hidden');
           resendBtn.classList.remove('hidden');
         }
@@ -1027,13 +1559,12 @@
     }
 
     function resendOTP() {
-      appData.generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+      appState.generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
       triggerMockOTPNotification();
       startOTPTimer();
       showToast('New OTP dispatched!');
     }
 
-    /* Verify OTP Submission */
     function verifyOTPCode() {
       const inputs = document.querySelectorAll('.otp-digit');
       let enteredCode = '';
@@ -1044,133 +1575,521 @@
         return;
       }
 
-      if (enteredCode === appData.generatedOTP || enteredCode === '123456') {
-        clearInterval(appData.timerInterval);
+      if (enteredCode === appState.generatedOTP || enteredCode === '123456') {
+        clearInterval(appState.timerInterval);
         document.getElementById('simulated-otp-banner').classList.add('hidden');
 
-        // Confetti Celebration
         if (typeof confetti === 'function') {
           confetti({
-            particleCount: 100,
-            spread: 70,
+            particleCount: 110,
+            spread: 80,
             origin: { y: 0.6 },
-            colors: ['#FF5A00', '#10B981', '#F59E0B']
+            colors: ['#FF5A00', '#10B981', '#FFA066']
           });
         }
 
-        showToast('Verification successful! Welcome to 23E NeeDs.');
-        loadAuthenticatedDashboard();
+        showToast('Verification successful! Loading Storefront...');
+        transitionToStorefront();
       } else {
-        showToast('Incorrect OTP. Try again or check the top banner.');
+        showToast('Incorrect OTP. Check demo box at top.');
       }
     }
 
-    /* Switch to Authenticated Dashboard */
-    function loadAuthenticatedDashboard() {
-      const onboardingCard = document.getElementById('onboarding-flow-card');
-      const dashView = document.getElementById('user-dashboard-view');
+    /* ===================================================
+       5. TRANSITION FROM AUTH TO FULL STOREFRONT
+       =================================================== */
+    function transitionToStorefront() {
+      appState.isAuthenticated = true;
 
-      if (onboardingCard) onboardingCard.classList.add('hidden');
-      if (dashView) dashView.classList.remove('hidden');
+      // Hide Auth Section, Show Storefront
+      document.getElementById('auth-section-view').classList.add('hidden');
+      document.getElementById('storefront-view').classList.remove('hidden');
 
-      // Populate user info
-      const u = appData.currentUser;
-      if (!u) return;
+      // Update Navigation Bar with Profile and Live Address
+      document.getElementById('nav-location-capsule').classList.remove('hidden');
+      document.getElementById('nav-user-profile').classList.remove('hidden');
 
-      document.getElementById('dash-user-name').innerText = u.name;
-      document.getElementById('dash-user-contact').innerText = `+91 ${u.phone} • ${u.email}`;
-      
-      const initials = u.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-      document.getElementById('user-avatar-initials').innerText = initials || '23E';
+      const u = appState.currentUser;
+      const firstName = u.name.split(' ')[0] || 'Member';
+      document.getElementById('nav-user-name').innerText = firstName;
+      document.getElementById('drop-user-name').innerText = u.name;
+      document.getElementById('drop-user-phone').innerText = `+91 ${u.phone}`;
+      document.getElementById('nav-avatar-icon').innerText = firstName[0].toUpperCase();
+      document.getElementById('drop-avatar-initial').innerText = firstName[0].toUpperCase();
 
-      // Update Zone Badge
-      const zoneTitle = document.getElementById('dash-zone-title');
-      const zoneDesc = document.getElementById('dash-zone-desc');
-      if (u.zone === 'urban') {
-        zoneTitle.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Urban Express (10m)`;
-        zoneDesc.innerText = `Connected Dark Store: Hyderabad Hitech Hub-04`;
+      // Set Address in Top Bar & Cart
+      const shortAddr = `${u.house ? u.house + ', ' : ''}${u.address}`;
+      document.getElementById('nav-address-detail').innerText = shortAddr;
+      document.getElementById('cart-address-snippet').innerText = shortAddr;
+      document.getElementById('modal-delivery-pin').innerText = `PIN: ${u.pincode}`;
+      document.getElementById('tracker-dest-address').innerText = shortAddr;
+
+      // Render Store Items
+      renderCatalogProducts();
+      updateCartUI();
+    }
+
+    /* ===================================================
+       6. STOREFRONT CATALOG FILTERING & RENDERING
+       =================================================== */
+    function switchZone(zone) {
+      appState.currentZone = zone;
+      const urbanBtn = document.getElementById('hz-urban-btn');
+      const ruralBtn = document.getElementById('hz-rural-btn');
+      const modePill = document.getElementById('storefront-mode-pill');
+      const bannerSub = document.getElementById('store-banner-subtitle');
+      const cartSla = document.getElementById('cart-sla-label');
+
+      if (zone === 'urban') {
+        urbanBtn.className = "px-2.5 py-1 rounded-lg font-bold bg-brand-orange text-white transition";
+        ruralBtn.className = "px-2.5 py-1 rounded-lg font-medium text-gray-400 hover:text-white transition";
+        modePill.className = "px-2.5 py-0.5 rounded-full bg-brand-orange/20 text-brand-orange border border-brand-orange/40 text-[10px] font-bold";
+        modePill.innerText = "Urban Express • 10-15 Min";
+        bannerSub.innerText = "Delivering from Dark Store Node #107 to your GPS entrance";
+        cartSla.innerText = "⚡ 10-15 Min Express Delivery";
+        showToast('Switched to Urban 10-Min Dark Store Mode');
       } else {
-        zoneTitle.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span> Rural Panchayat Hub`;
-        zoneDesc.innerText = `Connected Spoke: Kothur Gram Depot`;
+        ruralBtn.className = "px-2.5 py-1 rounded-lg font-bold bg-brand-orange text-white transition";
+        urbanBtn.className = "px-2.5 py-1 rounded-lg font-medium text-gray-400 hover:text-white transition";
+        modePill.className = "px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-bold";
+        modePill.innerText = "Rural Hub • Same Day Gram-Panchayat";
+        bannerSub.innerText = "Supplying direct from regional agri-depot to village pick-up center";
+        cartSla.innerText = "🌾 Same-Day Gram-Panchayat Hub Delivery";
+        showToast('Switched to Rural Hub-and-Spoke Catalog');
       }
 
-      document.getElementById('dash-pincode-badge').innerText = `PIN: ${u.pincode}`;
-      document.getElementById('dash-short-address').innerText = `${u.house ? u.house + ', ' : ''}${u.address}`;
+      renderCatalogProducts();
+    }
 
-      // Insert the current address into saved addresses list
-      appData.savedAddresses.unshift({
-        id: Date.now(),
-        tag: u.zone === 'urban' ? 'Current (City)' : 'Current (Gram Panchayat)',
-        address: `${u.house ? u.house + ', ' : ''}${u.address} - PIN ${u.pincode}`,
-        zone: u.zone,
-        isDefault: true
+    function filterCategory(cat) {
+      appState.activeCategory = cat;
+      const pills = document.querySelectorAll('.cat-pill');
+      pills.forEach(p => {
+        p.className = "cat-pill px-4 py-2 rounded-2xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-gray-300 text-xs font-semibold shrink-0 transition";
+      });
+      event.target.className = "cat-pill active px-4 py-2 rounded-2xl bg-brand-orange text-white text-xs font-bold shrink-0 transition shadow-md";
+
+      renderCatalogProducts();
+    }
+
+    function handleSearchFilter(keyword) {
+      appState.searchKeyword = keyword.toLowerCase().trim();
+      renderCatalogProducts();
+    }
+
+    function renderCatalogProducts() {
+      const grid = document.getElementById('product-grid');
+      const emptyState = document.getElementById('catalog-empty-state');
+      if (!grid) return;
+
+      const filtered = catalogData.filter(item => {
+        // Zone condition
+        const matchesZone = (item.zone === 'all') || (item.zone === appState.currentZone);
+        // Category condition
+        const matchesCategory = (appState.activeCategory === 'all') || (item.category === appState.activeCategory);
+        // Search condition
+        const matchesSearch = !appState.searchKeyword || item.title.toLowerCase().includes(appState.searchKeyword);
+
+        return matchesZone && matchesCategory && matchesSearch;
       });
 
-      renderSavedAddresses();
+      if (filtered.length === 0) {
+        grid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      } else {
+        emptyState.classList.add('hidden');
+      }
+
+      grid.innerHTML = filtered.map(item => {
+        const qty = appState.cart[item.id] || 0;
+        return `
+          <div class="glass-card rounded-2xl p-3 flex flex-col justify-between group hover:shadow-xl hover:shadow-brand-orange/5 relative overflow-hidden">
+            <!-- Badge -->
+            <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-[9px] font-bold text-brand-orange border border-white/10 z-10">
+              ${item.tag}
+            </span>
+
+            <!-- Image with Fallback -->
+            <div class="w-full h-32 rounded-xl bg-gray-900 overflow-hidden relative mb-2.5 flex items-center justify-center">
+              <img 
+                src="${item.image}" 
+                alt="${item.title}" 
+                class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                onerror="this.src='https://placehold.co/400x300/161920/FF5A00?text=23E+NeeDs'"
+              />
+            </div>
+
+            <!-- Meta -->
+            <div>
+              <p class="text-[10px] text-gray-400 font-medium">${item.weight}</p>
+              <h3 class="text-xs font-bold text-white line-clamp-2 mt-0.5 leading-snug">${item.title}</h3>
+            </div>
+
+            <!-- Price and Cart Button -->
+            <div class="flex items-center justify-between mt-3 pt-2 border-t border-gray-800/80">
+              <div>
+                <span class="text-xs font-black font-mono text-white">₹${item.price}</span>
+                ${item.origPrice > item.price ? `<span class="text-[10px] text-gray-500 line-through ml-1 font-mono">₹${item.origPrice}</span>` : ''}
+              </div>
+
+              <!-- Cart Controller -->
+              <div>
+                ${qty === 0 ? `
+                  <button 
+                    onclick="addToCart(${item.id})"
+                    class="px-3 py-1.5 rounded-xl bg-brand-orange/15 hover:bg-brand-orange text-brand-orange hover:text-white font-bold text-xs border border-brand-orange/40 transition active:scale-95"
+                  >
+                    + ADD
+                  </button>
+                ` : `
+                  <div class="flex items-center bg-brand-orange text-white rounded-xl overflow-hidden font-mono text-xs font-bold shadow-md">
+                    <button onclick="updateCartQuantity(${item.id}, -1)" class="px-2 py-1 hover:bg-black/20">-</button>
+                    <span class="px-2">${qty}</span>
+                    <button onclick="updateCartQuantity(${item.id}, 1)" class="px-2 py-1 hover:bg-black/20">+</button>
+                  </div>
+                `}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
-    function renderSavedAddresses() {
-      const container = document.getElementById('saved-addresses-list');
+    /* ===================================================
+       7. CART LOGIC, BILL CALCULATOR & DRAWER
+       =================================================== */
+    function addToCart(productId) {
+      if (!appState.cart[productId]) {
+        appState.cart[productId] = 1;
+      } else {
+        appState.cart[productId]++;
+      }
+      updateCartUI();
+      renderCatalogProducts();
+      showToast('Item added to cart');
+    }
+
+    function updateCartQuantity(productId, delta) {
+      if (appState.cart[productId]) {
+        appState.cart[productId] += delta;
+        if (appState.cart[productId] <= 0) {
+          delete appState.cart[productId];
+        }
+      }
+      updateCartUI();
+      renderCatalogProducts();
+    }
+
+    function updateCartUI() {
+      let totalCount = 0;
+      let subtotal = 0;
+
+      for (const [id, qty] of Object.entries(appState.cart)) {
+        totalCount += qty;
+        const product = catalogData.find(p => p.id == id);
+        if (product) {
+          subtotal += product.price * qty;
+        }
+      }
+
+      // Discount & Fees
+      const handlingFee = totalCount > 0 ? 4 : 0;
+      const grandTotal = Math.max(0, subtotal + handlingFee - appState.appliedDiscount);
+
+      // Header Cart Badge
+      document.getElementById('nav-cart-count').innerText = totalCount;
+      document.getElementById('cart-drawer-count').innerText = totalCount;
+      document.getElementById('mob-cart-count').innerText = totalCount;
+
+      const badgeTotal = document.getElementById('nav-cart-total-badge');
+      if (totalCount > 0) {
+        badgeTotal.classList.remove('hidden');
+        badgeTotal.innerText = `₹${grandTotal}`;
+      } else {
+        badgeTotal.classList.add('hidden');
+      }
+
+      // Mobile Floating Bar
+      const mobileBar = document.getElementById('mobile-floating-cart');
+      if (totalCount > 0 && appState.isAuthenticated) {
+        mobileBar.classList.remove('hidden');
+        document.getElementById('mob-cart-total').innerText = grandTotal;
+      } else {
+        mobileBar.classList.add('hidden');
+      }
+
+      // Drawer Bill Totals
+      document.getElementById('bill-item-total').innerText = subtotal;
+      document.getElementById('bill-grand-total').innerText = grandTotal;
+      document.getElementById('btn-pay-amount').innerText = grandTotal;
+      document.getElementById('modal-pay-total').innerText = grandTotal;
+
+      const checkoutBtn = document.getElementById('btn-proceed-checkout');
+      checkoutBtn.disabled = totalCount === 0;
+
+      // Populate Items in Drawer
+      renderCartDrawerItems();
+    }
+
+    function renderCartDrawerItems() {
+      const container = document.getElementById('cart-items-container');
       if (!container) return;
 
-      container.innerHTML = appData.savedAddresses.map((addr, idx) => `
-        <div class="p-3.5 rounded-2xl bg-gray-900 border ${addr.isDefault ? 'border-brand-orange/60 bg-brand-orange/5' : 'border-gray-800'} flex items-start justify-between gap-3">
-          <div class="flex items-start space-x-3">
-            <div class="w-8 h-8 rounded-xl bg-gray-800 flex items-center justify-center text-brand-orange text-xs shrink-0 mt-0.5">
-              <i class="fa-solid fa-${addr.zone === 'urban' ? 'building' : 'wheat-awn'}"></i>
-            </div>
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="text-xs font-bold text-white">${addr.tag}</span>
-                ${addr.isDefault ? '<span class="text-[9px] px-1.5 py-0.2 rounded bg-brand-orange text-white font-bold uppercase">Default</span>' : ''}
-              </div>
-              <p class="text-[11px] text-gray-300 mt-0.5 line-clamp-2">${addr.address}</p>
-            </div>
+      const itemEntries = Object.entries(appState.cart);
+      if (itemEntries.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 text-gray-500">
+            <i class="fa-solid fa-basket-shopping text-3xl mb-2"></i>
+            <p class="text-xs">Your basket is empty.</p>
+            <button onclick="toggleCartDrawer(false)" class="mt-3 px-3 py-1.5 rounded-xl bg-brand-orange/20 text-brand-orange text-xs font-bold">
+              Browse Needs
+            </button>
           </div>
+        `;
+        return;
+      }
 
-          <div class="shrink-0 flex items-center gap-2">
-            ${!addr.isDefault ? `
-              <button onclick="setDefaultAddress(${addr.id})" class="text-[10px] text-gray-400 hover:text-brand-orange font-semibold">Make Default</button>
-            ` : ''}
+      container.innerHTML = itemEntries.map(([id, qty]) => {
+        const item = catalogData.find(p => p.id == id);
+        if (!item) return '';
+
+        return `
+          <div class="p-3 rounded-2xl bg-gray-900 border border-gray-800 flex items-center justify-between gap-3">
+            <div class="flex items-center space-x-3">
+              <img src="${item.image}" alt="${item.title}" class="w-12 h-12 rounded-xl object-cover border border-gray-800" onerror="this.src='https://placehold.co/100/161920/FF5A00?text=23E'"/>
+              <div>
+                <h4 class="text-xs font-bold text-white line-clamp-1">${item.title}</h4>
+                <p class="text-[10px] text-gray-400 font-mono">₹${item.price} • ${item.weight}</p>
+              </div>
+            </div>
+
+            <!-- Qty controller -->
+            <div class="flex items-center bg-gray-800 rounded-xl overflow-hidden font-mono text-xs font-bold border border-gray-700">
+              <button onclick="updateCartQuantity(${item.id}, -1)" class="px-2 py-1 text-gray-400 hover:text-white">-</button>
+              <span class="px-2 text-white">${qty}</span>
+              <button onclick="updateCartQuantity(${item.id}, 1)" class="px-2 py-1 text-gray-400 hover:text-white">+</button>
+            </div>
           </div>
+        `;
+      }).join('');
+    }
+
+    function toggleCartDrawer(open) {
+      const drawer = document.getElementById('cart-drawer');
+      const overlay = document.getElementById('cart-drawer-overlay');
+
+      if (open) {
+        overlay.classList.remove('hidden');
+        drawer.classList.remove('translate-x-full');
+      } else {
+        drawer.classList.add('translate-x-full');
+        overlay.classList.add('hidden');
+      }
+    }
+
+    function applyCoupon() {
+      const input = document.getElementById('coupon-code-input').value.trim().toUpperCase();
+      const feedback = document.getElementById('coupon-feedback');
+      const discountRow = document.getElementById('bill-discount-row');
+      const discountAmt = document.getElementById('bill-discount-amt');
+
+      if (input === 'WELCOME23E' || input === 'SAVE50') {
+        appState.appliedDiscount = 50;
+        feedback.innerText = "Coupon WELCOME23E applied: ₹50 Instant Discount!";
+        feedback.classList.remove('hidden');
+        discountRow.classList.remove('hidden');
+        discountAmt.innerText = '50';
+        updateCartUI();
+        showToast('Promo code applied successfully!');
+      } else {
+        feedback.innerText = "Invalid coupon code. Try WELCOME23E";
+        feedback.className = "text-[10px] text-rose-400";
+        feedback.classList.remove('hidden');
+      }
+    }
+
+    /* ===================================================
+       8. CHECKOUT, PAYOUT & PAYMENT MODAL
+       =================================================== */
+    function openPaymentModal() {
+      toggleCartDrawer(false);
+      document.getElementById('modal-wallet-balance').innerText = appState.walletBalance.toFixed(2);
+      document.getElementById('payment-modal').classList.remove('hidden');
+    }
+
+    function closePaymentModal() {
+      document.getElementById('payment-modal').classList.add('hidden');
+    }
+
+    function selectPaymentMethod(method) {
+      appState.selectedPaymentMethod = method;
+      document.querySelectorAll('#payment-modal button, #payment-modal label').forEach(el => {
+        el.classList.remove('border-brand-orange');
+      });
+
+      if (method.startsWith('upi_')) {
+        document.getElementById(`pay-opt-${method.replace('upi_', '')}`).classList.add('border-brand-orange');
+      }
+    }
+
+    function confirmAndExecutePayment() {
+      const grandTotal = parseInt(document.getElementById('modal-pay-total').innerText, 10);
+      const btn = document.getElementById('btn-confirm-payment');
+
+      btn.classList.add('opacity-75', 'pointer-events-none');
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>Securing Payment & Dispatching...</span>`;
+
+      setTimeout(() => {
+        btn.classList.remove('opacity-75', 'pointer-events-none');
+        btn.innerHTML = `<i class="fa-solid fa-lock"></i><span>Pay & Dispatch Order</span>`;
+
+        closePaymentModal();
+
+        // Clear Cart
+        appState.cart = {};
+        updateCartUI();
+
+        // Open Live Order Tracker
+        openOrderTrackerModal(grandTotal);
+
+        if (typeof confetti === 'function') {
+          confetti({
+            particleCount: 120,
+            spread: 90,
+            origin: { y: 0.5 },
+            colors: ['#FF5A00', '#10B981']
+          });
+        }
+      }, 1600);
+    }
+
+    /* ===================================================
+       9. LIVE ORDER TRACKER & ETA TIMELINE
+       =================================================== */
+    let trackerTimer = null;
+    let trackerSeconds = 588; // 9 mins 48 secs
+
+    function openOrderTrackerModal() {
+      const modal = document.getElementById('order-tracking-modal');
+      modal.classList.remove('hidden');
+
+      const countdownEl = document.getElementById('tracker-countdown');
+      const statusText = document.getElementById('tracker-status-text');
+
+      clearInterval(trackerTimer);
+      trackerSeconds = 588;
+
+      trackerTimer = setInterval(() => {
+        trackerSeconds--;
+        const mins = String(Math.floor(trackerSeconds / 60)).padStart(2, '0');
+        const secs = String(trackerSeconds % 60).padStart(2, '0');
+        countdownEl.innerText = `${mins}:${secs} mins`;
+
+        if (trackerSeconds === 500) {
+          statusText.innerText = "Rider picked up parcel • En route via 100ft road";
+          document.getElementById('step-ride-sub').innerText = "Rider Suresh is 800m away";
+        } else if (trackerSeconds <= 0) {
+          clearInterval(trackerTimer);
+          countdownEl.innerText = "Delivered!";
+          statusText.innerText = "Order handed over at doorstep. Enjoy your 23E NeeDs!";
+        }
+      }, 1000);
+    }
+
+    function closeTrackingModal() {
+      document.getElementById('order-tracking-modal').classList.add('hidden');
+      clearInterval(trackerTimer);
+    }
+
+    /* ===================================================
+       10. SAVED ADDRESSES & PROFILE MANAGEMENT
+       =================================================== */
+    function toggleProfileDropdown() {
+      const menu = document.getElementById('profile-dropdown-menu');
+      menu.classList.toggle('hidden');
+    }
+
+    function openProfileModal() {
+      const modal = document.getElementById('profile-addresses-modal');
+      modal.classList.remove('hidden');
+
+      const listContainer = document.getElementById('modal-address-list');
+      listContainer.innerHTML = appState.savedAddresses.map(addr => `
+        <div class="p-3 rounded-2xl bg-gray-900 border ${addr.isDefault ? 'border-brand-orange bg-brand-orange/5' : 'border-gray-800'} flex items-start justify-between gap-2">
+          <div class="text-xs">
+            <div class="flex items-center gap-1.5">
+              <strong class="text-white">${addr.tag}</strong>
+              ${addr.isDefault ? '<span class="text-[9px] px-1 rounded bg-brand-orange text-white font-bold">Active</span>' : ''}
+            </div>
+            <p class="text-[10px] text-gray-400 mt-0.5 line-clamp-2">${addr.address}</p>
+          </div>
+          ${!addr.isDefault ? `
+            <button onclick="selectAddressAsDefault(${addr.id})" class="text-[10px] text-brand-orange font-bold hover:underline shrink-0">
+              Select
+            </button>
+          ` : ''}
         </div>
       `).join('');
     }
 
-    function setDefaultAddress(id) {
-      appData.savedAddresses.forEach(a => {
-        a.isDefault = a.id === id;
-      });
-      renderSavedAddresses();
-      showToast('Default delivery destination updated');
+    function selectAddressAsDefault(id) {
+      appState.savedAddresses.forEach(a => a.isDefault = (a.id === id));
+      const active = appState.savedAddresses.find(a => a.id === id);
+      if (active) {
+        document.getElementById('nav-address-detail').innerText = active.address;
+        document.getElementById('cart-address-snippet').innerText = active.address;
+        showToast(`Delivery location set to ${active.tag}`);
+      }
+      closeProfileModal();
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profile-addresses-modal').classList.add('hidden');
     }
 
     function promptAddNewAddress() {
-      const newTag = prompt("Enter Address Label (e.g. Office, Godown, Home):", "Work");
-      if (!newTag) return;
-      const newAddress = prompt("Enter Address / Landmark:", "Cyber Gateway, Level 2, Hyderabad");
-      if (!newAddress) return;
+      const label = prompt("Enter Address Label (e.g. Office, Parent Farm, Home):", "Work");
+      if (!label) return;
+      const addr = prompt("Enter Address and PIN Code:", "Madhapur Hitech Hub, Hyderabad - 500081");
+      if (!addr) return;
 
-      appData.savedAddresses.push({
+      appState.savedAddresses.push({
         id: Date.now(),
-        tag: newTag,
-        address: newAddress,
+        tag: label,
+        address: addr,
         zone: 'urban',
         isDefault: false
       });
-      renderSavedAddresses();
-      showToast(`Address "${newTag}" saved successfully`);
+      openProfileModal();
+      showToast(`Added "${label}" to saved destinations`);
+    }
+
+    function toggleOrdersModal() {
+      openOrderTrackerModal(0);
+    }
+
+    function handleLogoClick() {
+      if (appState.isAuthenticated) {
+        filterCategory('all');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
 
     function handleLogout() {
-      appData.currentUser = null;
-      document.getElementById('user-dashboard-view').classList.add('hidden');
-      document.getElementById('onboarding-flow-card').classList.remove('hidden');
+      appState.isAuthenticated = false;
+      appState.currentUser = null;
+      document.getElementById('profile-dropdown-menu').classList.add('hidden');
+      document.getElementById('storefront-view').classList.add('hidden');
+      document.getElementById('auth-section-view').classList.remove('hidden');
+      document.getElementById('nav-location-capsule').classList.add('hidden');
+      document.getElementById('nav-user-profile').classList.add('hidden');
+      document.getElementById('mobile-floating-cart').classList.add('hidden');
       goToStep(1);
       showToast('Logged out of 23E NeeDs.');
     }
 
-    /* Toast Notification Helper */
+    /* Toast Helper */
     let toastTimeout;
     function showToast(msg) {
       const toast = document.getElementById('toast');
@@ -1185,12 +2104,37 @@
       }, 3000);
     }
 
-    /* Initialize Everything on Load */
+    /* OTP Inputs Auto-advance */
+    document.addEventListener('DOMContentLoaded', () => {
+      const inputs = document.querySelectorAll('.otp-digit');
+      inputs.forEach((input, index) => {
+        input.addEventListener('input', () => {
+          if (input.value.length === 1 && index < inputs.length - 1) {
+            inputs[index + 1].focus();
+          }
+        });
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Backspace' && input.value === '' && index > 0) {
+            inputs[index - 1].focus();
+          }
+        });
+        input.addEventListener('paste', (e) => {
+          e.preventDefault();
+          const pasteData = (e.clipboardData || window.clipboardData).getData('text').trim();
+          if (/^\d{6}$/.test(pasteData)) {
+            pasteData.split('').forEach((char, i) => {
+              if (inputs[i]) inputs[i].value = char;
+            });
+            inputs[5].focus();
+          }
+        });
+      });
+    });
+
+    /* Initialize 3D & Map on Load */
     window.onload = function () {
       init3DHero();
       initLeafletMap();
-      const addrBox = document.getElementById('input-address-full');
-      if (addrBox) addrBox.value = appData.location.address;
     };
   </script>
 </body>
